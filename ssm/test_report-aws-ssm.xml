@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-  <testsuite name="AWS/SSM" tests="2" failures="0" errors="0" time="0">
-      <testcase name="SSM GetSecret When the client fails should return an error" classname="AWS/SSM" time="8.5e-06"></testcase>
-      <testcase name="SSM GetSecret When the call succeeds it should return the secret" classname="AWS/SSM" time="1.28e-05"></testcase>
-  </testsuite>

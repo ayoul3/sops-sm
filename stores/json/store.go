@@ -6,17 +6,29 @@ import (
 	"fmt"
 	"io"
 
-	"go.mozilla.org/sops/v3"
-	"go.mozilla.org/sops/v3/stores"
+	"github.com/ayoul3/sops-sm/sops"
+	"github.com/ayoul3/sops-sm/stores"
 )
 
 // Store handles storage of JSON data.
 type Store struct {
+	path string
+}
+
+func NewStore() stores.StoreAPI {
+	return &Store{}
 }
 
 // BinaryStore handles storage of binary data in a JSON envelope.
 type BinaryStore struct {
 	store Store
+}
+
+func (store *Store) GetFilePath() string {
+	return store.path
+}
+func (store *Store) SetFilePath(p string) {
+	store.path = p
 }
 
 // LoadEncryptedFile loads an encrypted json file onto a sops.Tree object
@@ -240,9 +252,6 @@ func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
 			}
 		}
 		return sops.Tree{}, fmt.Errorf("Error unmarshalling input json: %s", err)
-	}
-	if metadataHolder.Metadata == nil {
-		return sops.Tree{}, sops.MetadataNotFound
 	}
 	metadata, err := metadataHolder.Metadata.ToInternal()
 	if err != nil {

@@ -2,27 +2,36 @@ package lib
 
 import (
 	"fmt"
+	"path/filepath"
 
-	"github.com/ayoul3/sops-sm/sops"
+	"github.com/ayoul3/sops-sm/stores"
+	"github.com/ayoul3/sops-sm/stores/json"
 	"github.com/ayoul3/sops-sm/stores/yaml"
 )
 
-func newYamlStore() sops.Store {
-	return &yaml.Store{}
-}
-
-var stores = map[string]sops.Store{
-	//Json: newJsonStore,
-	"yaml": newYamlStore(),
+var formats = map[string]stores.StoreAPI{
+	"yaml": yaml.NewStore(),
+	"json": json.NewStore(),
 }
 
 func getFileFormat(inputFile string) string {
-	return "yaml"
-
+	extension := filepath.Ext(inputFile)
+	if len(extension) < 2 {
+		return ""
+	}
+	extension = extension[1:]
+	switch extension {
+	case "yaml", "yml":
+		return "yaml"
+	default:
+		return extension
+	}
 }
-func GetStore(inputFile string) (sops.Store, error) {
+
+func GetStore(inputFile string) (stores.StoreAPI, error) {
 	format := getFileFormat(inputFile)
-	if val, ok := stores[format]; ok {
+	if val, ok := formats[format]; ok {
+		val.SetFilePath(inputFile)
 		return val, nil
 	}
 	return nil, fmt.Errorf("File format not supported: %s", format)

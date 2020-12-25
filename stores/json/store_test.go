@@ -3,8 +3,8 @@ package json
 import (
 	"testing"
 
+	"github.com/ayoul3/sops-sm/sops"
 	"github.com/stretchr/testify/assert"
-	"go.mozilla.org/sops/v3"
 )
 
 func TestDecodeJSON(t *testing.T) {
@@ -301,13 +301,6 @@ func TestEncodeJSONArrayOfObjects(t *testing.T) {
 	out, err := store.EmitPlainFile(tree.Branches)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, string(out))
-}
-
-func TestUnmarshalMetadataFromNonSOPSFile(t *testing.T) {
-	data := []byte(`{"hello": 2}`)
-	store := Store{}
-	_, err := store.LoadEncryptedFile(data)
-	assert.Equal(t, sops.MetadataNotFound, err)
 }
 
 func TestLoadJSONFormattedBinaryFile(t *testing.T) {

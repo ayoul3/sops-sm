@@ -1,9 +1,9 @@
-package myssm_test
+package ssm_test
 
 import (
 	"testing"
 
-	myssm "github.com/ayoul3/sops-sm/ssm"
+	"github.com/ayoul3/sops-sm/provider/ssm"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
@@ -18,17 +18,17 @@ var _ = Describe("SSM", func() {
 	Describe("GetSecret", func() {
 		Context("When the client fails", func() {
 			It("should return an error", func() {
-				client := myssm.NewClient(&myssm.MockClient{GetParameterShouldFail: true})
+				client := ssm.NewClient(&ssm.MockClient{GetParameterShouldFail: true}, "eu-west-1")
 				_, err := client.GetSecret("test")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 		Context("When the call succeeds", func() {
 			It("it should return the secret", func() {
-				client := myssm.NewClient(&myssm.MockClient{})
+				client := ssm.NewClient(&ssm.MockClient{}, "eu-west-1")
 				secret, err := client.GetSecret("test")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(secret).To(Equal(myssm.MockSecretValue))
+				Expect(secret).To(Equal(ssm.MockSecretValue))
 			})
 		})
 	})

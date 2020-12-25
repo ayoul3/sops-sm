@@ -1,4 +1,6 @@
 values:
   - key1: arn:aws:ssm:eu-west-1:886477354405:parameter/key1
   - key2: value2
+  - key3: arn:aws:ssm:eu-west-3:886477354405:parameter/key3
+  - key4: arn:aws:ssm:eu-west-1:886477354405:parameter/key1
 extra: top

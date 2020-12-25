@@ -10,6 +10,18 @@ import (
 
 // Store handles storage of YAML data
 type Store struct {
+	path string
+}
+
+func NewStore() stores.StoreAPI {
+	return &Store{}
+}
+
+func (store *Store) GetFilePath() string {
+	return store.path
+}
+func (store *Store) SetFilePath(p string) {
+	store.path = p
 }
 
 func (store Store) mapSliceToTreeBranch(in yaml.MapSlice) sops.TreeBranch {

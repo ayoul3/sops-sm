@@ -1,11 +1,12 @@
 package sm
 
 import (
-	"encoding/base64"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
-	"github.com/ayoul3/sops-sm/session"
+	"github.com/ayoul3/sops-sm/provider/session"
 )
 
 // Secret contains a SM secret details
@@ -38,35 +39,22 @@ func NewAPIForRegion(region string) secretsmanageriface.SecretsManagerAPI {
 }
 
 // GetSecret return a Secret fetched from SM
-func (c *Client) GetSecret(key string) (Secret, error) {
-	var secret Secret
-	res, err := c.smAPI.GetSecretValue(new(secretsmanager.GetSecretValueInput).SetSecretId(key))
+func (c *Client) GetSecret(key string) (string, error) {
+	formattedKey := c.ExtractPath(key)
+	res, err := c.smAPI.GetSecretValue(new(secretsmanager.GetSecretValueInput).SetSecretId(formattedKey))
 	if err != nil {
-		return secret, err
+		return "", err
 	}
-	secret.Key = key
-	secret.Value = *res.SecretString
-	return secret, nil
+	//secret.Key = key
+	//secret.Value = *res.SecretString
+	return *res.SecretString, nil
 }
 
-// GetSecretWithTags return a Secret fetched from SM with its tags
-func (c *Client) GetSecretWithTags(key string) (Secret, error) {
-	secret, err := c.GetSecret(key)
-	if err != nil {
-		return secret, err
-	}
-	res, err := c.smAPI.DescribeSecret(new(secretsmanager.DescribeSecretInput).SetSecretId(key))
-	if err != nil {
-		return secret, err
-	}
-	secret.Tags = make(map[string]string)
-	for _, tag := range res.Tags {
-		secret.Tags[*tag.Key] = *tag.Value
-	}
-	return secret, nil
+func (c *Client) IsSecret(key string) bool {
+	return strings.Contains(key, "arn:aws:secretsmanager")
 }
 
-func b64Decode(input string) (string, error) {
-	res, err := base64.StdEncoding.DecodeString(input)
-	return string(res), err
+func (c *Client) ExtractPath(in string) (out string) {
+	var re = regexp.MustCompile(`arn:aws:secretsmanager:[a-z0-1-]+:\d+:secret`)
+	return re.ReplaceAllString(in, ``)
 }

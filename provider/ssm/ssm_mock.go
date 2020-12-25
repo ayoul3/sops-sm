@@ -1,4 +1,4 @@
-package myssm
+package ssm
 
 import (
 	"encoding/base64"
