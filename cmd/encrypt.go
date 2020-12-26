@@ -1,59 +1,71 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
 
 	"github.com/ayoul3/sops-sm/provider"
 	"github.com/ayoul3/sops-sm/sops"
 	"github.com/ayoul3/sops-sm/stores"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
-func HandleEncrypt(filePath string) {
+func (h *Handler) HandleEncrypt(filePath string) {
+	var content []byte
 	providerClient := provider.Init()
 
-	loader, err := GetStore(filePath)
+	loader, err := h.GetStore(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tree, err := LoadPlainFile(loader)
+	tree, err := LoadPlainFile(h, loader)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err = EncryptTree(providerClient, loader, tree); err != nil {
+	if content, err = EncryptTree(providerClient, loader, tree); err != nil {
+		log.Fatal(err)
+	}
+
+	if err = DumpPlainFile(h, tree.FilePath, content); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func LoadPlainFile(loader stores.StoreAPI) (tree *sops.Tree, err error) {
-	fileBytes, err := ioutil.ReadFile(loader.GetFilePath())
-	if err != nil {
+func LoadPlainFile(h *Handler, loader stores.StoreAPI) (tree *sops.Tree, err error) {
+	var fileBytes []byte
+	var cacheReader afero.File
+
+	if fileBytes, err = afero.ReadFile(h.Fs, loader.GetFilePath()); err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error reading file ")
 	}
 	if tree, err = loader.LoadFile(fileBytes); err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error loading file ")
 	}
-	if err = tree.LoadCache(loader.GetCachePath()); err != nil {
+
+	if cacheReader, err = h.Fs.Open(loader.GetCachePath()); err != nil {
+		return nil, errors.Wrap(err, "LoadPlainFile: Error reading file ")
+	}
+	defer cacheReader.Close()
+
+	if err = tree.LoadCache(cacheReader); err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error loading cache file ")
 	}
 	tree.FilePath = loader.GetFilePath()
 	return tree, nil
 }
 
-func EncryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (err error) {
-	var content []byte
+func EncryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (content []byte, err error) {
 	if err = tree.Encrypt(provider); err != nil {
-		return err
+		return
 	}
 	if content, err = loader.EmitFile(tree); err != nil {
-		return err
+		return
 	}
-	return DumpPlainFile(tree.FilePath, content)
+	return
 }
 
-func DumpPlainFile(file string, content []byte) (err error) {
-	return ioutil.WriteFile(file, content, 0644)
+func DumpPlainFile(h *Handler, file string, content []byte) (err error) {
+	return afero.WriteFile(h.Fs, file, content, 0644)
 }

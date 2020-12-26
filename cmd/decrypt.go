@@ -2,33 +2,37 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/ayoul3/sops-sm/provider"
 	"github.com/ayoul3/sops-sm/sops"
 	"github.com/ayoul3/sops-sm/stores"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
-func HandleDecrypt(filePath string) {
-	providerClient := provider.Init()
+func (h *Handler) HandleDecrypt(filePath string) {
+	var content []byte
 
-	loader, err := GetStore(filePath)
+	providerClient := provider.Init()
+	loader, err := h.GetStore(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	tree, err := LoadEncryptedFile(loader)
+	tree, err := LoadEncryptedFile(h, loader)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = DecryptTree(providerClient, loader, tree); err != nil {
+	if content, err = DecryptTree(h, providerClient, loader, tree); err != nil {
+		log.Fatal(err)
+	}
+	if err = DumpDecryptedTree(h, tree.FilePath, loader.GetCachePath(), content, tree.GetCache()); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func LoadEncryptedFile(loader stores.StoreAPI) (*sops.Tree, error) {
-	fileBytes, err := ioutil.ReadFile(loader.GetFilePath())
+func LoadEncryptedFile(h *Handler, loader stores.StoreAPI) (*sops.Tree, error) {
+	fileBytes, err := afero.ReadFile(h.Fs, loader.GetFilePath())
 	if err != nil {
 		return nil, fmt.Errorf("Error reading file: %s", err)
 	}
@@ -37,22 +41,19 @@ func LoadEncryptedFile(loader stores.StoreAPI) (*sops.Tree, error) {
 	return tree, err
 }
 
-func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (err error) {
-	var content []byte
+func DecryptTree(h *Handler, provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (content []byte, err error) {
 	if err = tree.Decrypt(provider); err != nil {
-		return err
+		return
 	}
 	if content, err = loader.EmitFile(tree); err != nil {
-		return err
+		return
 	}
-	cacheContent := tree.GetCache()
-	cacheFile := loader.GetCachePath()
-	return DumpDecryptedFiles(tree.FilePath, cacheFile, content, cacheContent)
+	return
 }
 
-func DumpDecryptedFiles(file, cacheFile string, content, cacheContent []byte) (err error) {
-	if err = ioutil.WriteFile(cacheFile, cacheContent, 0644); err != nil {
+func DumpDecryptedTree(h *Handler, file, cacheFile string, content, cacheContent []byte) (err error) {
+	if err = afero.WriteFile(h.Fs, cacheFile, cacheContent, 0644); err != nil {
 		return errors.Wrapf(err, "Could not write to file %s", cacheFile)
 	}
-	return ioutil.WriteFile(file, content, 0644)
+	return afero.WriteFile(h.Fs, file, content, 0644)
 }

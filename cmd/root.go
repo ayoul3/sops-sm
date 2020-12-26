@@ -29,7 +29,7 @@ var (
 				log.Fatalf("Input file is required")
 			}
 			validateFile(args[0])
-			HandleDecrypt(args[0])
+			NewHandler().HandleDecrypt(args[0])
 		},
 	}
 	encrypt = &cobra.Command{
@@ -40,7 +40,7 @@ var (
 				log.Fatalf("Input file is required")
 			}
 			validateFile(args[0])
-			HandleEncrypt(args[0])
+			NewHandler().HandleEncrypt(args[0])
 		},
 	}
 )

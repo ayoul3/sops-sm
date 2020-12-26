@@ -4,14 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
+	"io"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/ayoul3/sops-sm/provider"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -335,15 +334,9 @@ func (tree *Tree) IsCached(key string) (string, bool) {
 	return secret.Value, found
 }
 
-func (tree *Tree) LoadCache(filePath string) (err error) {
-	var file *os.File
-	if file, err = os.Open(filePath); err != nil {
-		return errors.Wrap(err, "LoadCache")
-	}
-	defer file.Close()
-
+func (tree *Tree) LoadCache(fileReader io.Reader) (err error) {
 	tree.Cache = make(map[string]CachedSecret, 0)
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(fileReader)
 	for scanner.Scan() {
 		line := strings.Split(strings.Trim(scanner.Text(), "\n"), ",")
 		if len(line) < 2 {

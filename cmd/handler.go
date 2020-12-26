@@ -5,7 +5,18 @@ import (
 	"path/filepath"
 
 	"github.com/ayoul3/sops-sm/stores"
+	"github.com/spf13/afero"
 )
+
+type Handler struct {
+	Fs afero.Fs
+}
+
+func NewHandler() *Handler {
+	return &Handler{
+		Fs: afero.NewOsFs(),
+	}
+}
 
 func GetFileFormat(inputFile string) string {
 	extension := filepath.Ext(inputFile)
@@ -21,7 +32,7 @@ func GetFileFormat(inputFile string) string {
 	}
 }
 
-func GetStore(inputFile string) (stores.StoreAPI, error) {
+func (h *Handler) GetStore(inputFile string) (stores.StoreAPI, error) {
 	format := GetFileFormat(inputFile)
 	if val, ok := formats[format]; ok {
 		val.SetFilePath(inputFile)
