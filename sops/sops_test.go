@@ -19,13 +19,13 @@ func getTree() Tree {
 					Value: TreeBranch{
 						TreeItem{
 							Key:   "nested",
-							Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam",
+							Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam",
 						},
 					},
 				},
 				TreeItem{
 					Key:   "secret",
-					Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam",
+					Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam",
 				},
 				TreeItem{
 					Key:   Comment{Value: " Example comment"},
@@ -66,18 +66,18 @@ var _ = Describe("Decrypt", func() {
 			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "test"}}))
 			Expect(tree.Branches[0][1].Value).To(Equal("test"))
 			Expect(len(tree.Cache)).To(Equal(1))
-			Expect(tree.Cache).To(HaveKey("arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"))
-			Expect(tree.Cache["arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"].Value).To(Equal("test"))
-			Expect(len(tree.Cache["arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"].Path)).To(Equal(2))
+			Expect(tree.Cache).To(HaveKey("arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"))
+			Expect(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Value).To(Equal("test"))
+			Expect(len(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Path)).To(Equal(2))
 		})
 	})
 	Context("When decrypting a tree with index", func() {
 		It("should return branches with secret value", func() {
 			client := ssm.NewClient(&ssm.MockClient{SecretValue: `{"index1": "value1", "index2": "value2"}`})
 			tree := getTree()
-			tree.Branches[0][1].Value = "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam@index1"
+			tree.Branches[0][1].Value = "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam@index1"
 			tree.Branches[0][3].Value = []interface{}{
-				"arn:aws:ssm:eu-west-1:886477354405:parameter/someparam@index2",
+				"arn:aws:ssm:eu-west-1:123456789123:parameter/someparam@index2",
 				"example_value2",
 			}
 
@@ -89,9 +89,9 @@ var _ = Describe("Decrypt", func() {
 				"example_value2",
 			}))
 			Expect(len(tree.Cache)).To(Equal(1))
-			Expect(tree.Cache).To(HaveKey("arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"))
-			Expect(tree.Cache["arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"].Value).To(Equal(`{"index1": "value1", "index2": "value2"}`))
-			Expect(len(tree.Cache["arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"].Path)).To(Equal(3))
+			Expect(tree.Cache).To(HaveKey("arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"))
+			Expect(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Value).To(Equal(`{"index1": "value1", "index2": "value2"}`))
+			Expect(len(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Path)).To(Equal(3))
 		})
 	})
 	Context("When decrypting a tree fails", func() {
@@ -112,13 +112,13 @@ var _ = Describe("Encrypt", func() {
 			tree.Branches[0][0].Value = "test"
 			tree.Branches[0][0].Value = TreeBranch{TreeItem{Key: "nested", Value: "test"}}
 			tree.Cache = map[string]CachedSecret{
-				"hello:nested": {Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"},
-				"secret":       {Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"},
+				"hello:nested": {Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"},
+				"secret":       {Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"},
 			}
 			err := tree.Encrypt(client)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"}}))
-			Expect(tree.Branches[0][1].Value).To(Equal("arn:aws:ssm:eu-west-1:886477354405:parameter/someparam"))
+			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"}}))
+			Expect(tree.Branches[0][1].Value).To(Equal("arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"))
 		})
 	})
 })

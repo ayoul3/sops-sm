@@ -19,14 +19,14 @@ var _ = Describe("SSM", func() {
 		Context("When the client fails", func() {
 			It("should return an error", func() {
 				client := ssm.NewClient(&ssm.MockClient{GetParameterShouldFail: true})
-				_, err := client.GetSecret("arn:aws:ssm:eu-west-1:886477354405:parameter/key1")
+				_, err := client.GetSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 		Context("When the keys contains an index", func() {
 			It("it should return the secret", func() {
 				client := ssm.NewClient(&ssm.MockClient{})
-				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:886477354405:parameter/key1@index")
+				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1@index")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(secret).To(Equal(ssm.MockSecretValue))
 			})
@@ -34,7 +34,7 @@ var _ = Describe("SSM", func() {
 		Context("When the call succeeds", func() {
 			It("it should return the secret", func() {
 				client := ssm.NewClient(&ssm.MockClient{})
-				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:886477354405:parameter/key1")
+				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(secret).To(Equal(ssm.MockSecretValue))
 			})

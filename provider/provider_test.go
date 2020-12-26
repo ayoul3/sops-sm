@@ -29,7 +29,7 @@ var _ = Describe("provider", func() {
 				Expect(err).To(HaveOccurred())
 			})
 			It("should return an error about missing pattern", func() {
-				_, err := provider.GetSecret("arn:aws:secretsmanager:eu-west-1:886477354405:secret/key1@index")
+				_, err := provider.GetSecret("arn:aws:secretsmanager:eu-west-1:123456789123:secret/key1@index")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -43,11 +43,11 @@ var _ = Describe("provider", func() {
 				},
 			}
 			It("should return true for SSM", func() {
-				check := provider.IsSecret("arn:aws:ssm:eu-west-1:886477354405:parameter/key1@index")
+				check := provider.IsSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1@index")
 				Expect(check).To(BeTrue())
 			})
 			It("should return true for SM", func() {
-				check := provider.IsSecret("arn:aws:secretsmanager:eu-west-1:886477354405:secret/key1@index")
+				check := provider.IsSecret("arn:aws:secretsmanager:eu-west-1:123456789123:secret/key1@index")
 				Expect(check).To(BeTrue())
 			})
 		})

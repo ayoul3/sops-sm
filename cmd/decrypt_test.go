@@ -32,7 +32,7 @@ func getTree() sops.Tree {
 			sops.TreeBranch{
 				sops.TreeItem{
 					Key:   "name",
-					Value: "arn:aws:ssm:eu-west-1:886477354405:parameter/someparam",
+					Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam",
 				},
 			},
 		},
@@ -108,7 +108,7 @@ var _ = Describe("DumpDecryptedTree", func() {
 
 			c, err = afero.ReadFile(handler.Fs, "test.yaml.cache")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(c).To(Equal([]byte("name,arn:aws:ssm:eu-west-1:886477354405:parameter/someparam\n")))
+			Expect(c).To(Equal([]byte("name,arn:aws:ssm:eu-west-1:123456789123:parameter/someparam\n")))
 		})
 	})
 })
