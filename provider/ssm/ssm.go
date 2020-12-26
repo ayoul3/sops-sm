@@ -51,14 +51,14 @@ func NewAPIForRegion(region string) (ssmiface.SSMAPI, string) {
 	return awsssm.New(session.NewFromRegion(region)), region
 }
 
-// GetSecret return a Secret fetched from SM
+// GetSecret return a Secret fetched from SSM
 func (c *Client) GetSecret(key string) (secret string, err error) {
-	if c.api, err = c.WithRegion(key); err != nil {
+	var api ssmiface.SSMAPI
+	if api, err = c.WithRegion(key); err != nil {
 		return "", err
 	}
 	formattedKey := c.ExtractPath(key)
-	fmt.Println(formattedKey)
-	res, err := c.api.GetParameter(new(awsssm.GetParameterInput).SetName(formattedKey).SetWithDecryption(true))
+	res, err := api.GetParameter(new(awsssm.GetParameterInput).SetName(formattedKey).SetWithDecryption(true))
 	if err != nil {
 		return
 	}
@@ -71,11 +71,10 @@ func (c *Client) WithRegion(key string) (ssmiface.SSMAPI, error) {
 	if len(match) < 1 {
 		return nil, fmt.Errorf("Badly formatted key %s. Could not get region.", key)
 	}
-	region := match[1]
-	if region != c.region {
-		log.Infof("Changing regions to %s", region)
-		newAPI, _ := NewAPIForRegion(region)
-		c.region = region
+	newRegion := match[1]
+	if newRegion != c.region {
+		log.Infof("Changing regions to %s", newRegion)
+		newAPI, _ := NewAPIForRegion(newRegion)
 		return newAPI, nil
 	}
 	return c.api, nil
@@ -85,7 +84,12 @@ func (c *Client) IsSecret(key string) bool {
 	return strings.Contains(key, "arn:aws:ssm:")
 }
 
-func (c *Client) ExtractPath(in string) (out string) {
-	var re = regexp.MustCompile(`arn:aws:ssm:[a-z0-9-]+:\d+:parameter`)
-	return re.ReplaceAllString(in, ``)
+func (c *Client) ExtractPath(key string) (out string) {
+	var re = regexp.MustCompile(`arn:aws:ssm:[a-z0-9-]+:\d+:parameter([a-zA-Z0-9/._-]+)`)
+	match := re.FindStringSubmatch(key)
+	if len(match) < 1 {
+		log.Warnf("Badly formatted key %s", key)
+		return ""
+	}
+	return match[1]
 }

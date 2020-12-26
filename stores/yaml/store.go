@@ -20,6 +20,7 @@ func NewStore() stores.StoreAPI {
 func (store *Store) GetFilePath() string {
 	return store.path
 }
+
 func (store *Store) SetFilePath(p string) {
 	store.path = p
 }
@@ -120,18 +121,6 @@ func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
 	if err := (yaml.CommentUnmarshaler{}).UnmarshalDocuments(in, &data); err != nil {
 		return sops.Tree{}, fmt.Errorf("Error unmarshaling input YAML: %s", err)
 	}
-	// Because we don't know what fields the input file will have, we have to
-	// load the file in two steps.
-	// First, we load the file's metadata, the structure of which is known.
-	metadataHolder := stores.SopsFile{}
-	err := yaml.Unmarshal(in, &metadataHolder)
-	if err != nil {
-		return sops.Tree{}, fmt.Errorf("Error unmarshalling input yaml: %s", err)
-	}
-	metadata, err := metadataHolder.Metadata.ToInternal()
-	if err != nil {
-		return sops.Tree{}, err
-	}
 	var branches sops.TreeBranches
 	for _, doc := range data {
 		for i, item := range doc {
@@ -143,7 +132,7 @@ func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
 	}
 	return sops.Tree{
 		Branches: branches,
-		Metadata: metadata,
+		Cache:    make(map[string]sops.CachedSecret, 0),
 	}, nil
 }
 
@@ -171,7 +160,6 @@ func (store *Store) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
 			out = append(out, "---\n"...)
 		}
 		yamlMap := store.treeBranchToYamlMap(branch)
-		yamlMap = append(yamlMap, yaml.MapItem{Key: "sops", Value: stores.MetadataFromInternal(in.Metadata)})
 		tout, err := (&yaml.YAMLMarshaler{Indent: 4}).Marshal(yamlMap)
 		if err != nil {
 			return nil, fmt.Errorf("Error marshaling to yaml: %s", err)
@@ -190,7 +178,7 @@ func (store *Store) EmitPlainFile(branches sops.TreeBranches) ([]byte, error) {
 			out = append(out, "---\n"...)
 		}
 		yamlMap := store.treeBranchToYamlMap(branch)
-		tmpout, err := (&yaml.YAMLMarshaler{Indent: 4}).Marshal(yamlMap)
+		tmpout, err := (&yaml.YAMLMarshaler{Indent: 2}).Marshal(yamlMap)
 		if err != nil {
 			return nil, fmt.Errorf("Error marshaling to yaml: %s", err)
 		}

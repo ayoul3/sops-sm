@@ -1,8 +1,10 @@
 package sops
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -28,9 +30,18 @@ type TreeBranch []TreeItem
 // Trees usually have more than one branch
 type TreeBranches []TreeBranch
 
+type PathSecret struct {
+	FullKey  string
+	FullPath string
+}
+type CachedSecret struct {
+	Value string
+	Path  []PathSecret
+}
+
 // Tree is the data structure used by sops to represent documents internally
 type Tree struct {
-	Metadata Metadata
+	Cache    map[string]CachedSecret
 	Branches TreeBranches
 	// FilePath is the path of the file this struct represents
 	FilePath string
@@ -223,28 +234,30 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 // If decryption is successful, it returns the MAC for the decrypted tree.
 func (tree Tree) Decrypt(provider provider.API) error {
 	log.Info("Decrypting tree")
-	tree.Metadata.DataKey = make(map[string]string, 0)
 
 	walk := func(branch TreeBranch) error {
-		_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (interface{}, error) {
-			var v, cached string
+		_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
+			var cached, secretValue string
 			var ok, found bool
 
-			pathString := strings.Join(path, ":") + ":"
+			pathString := strings.Join(path, ":")
 			log.Infof("Walking path %s ", pathString)
 
 			if v, ok = in.(string); !ok {
-				return nil, fmt.Errorf("Decrypt - expecting string value for secret key ID")
+				return in, nil
 			}
-			if cached, found = tree.Metadata.DataKey[v]; found {
+			if cached, found = tree.IsCached(v.(string)); found {
 				log.Infof("Found secret in cache %s", v)
-				return cached, nil
+				tree.CacheSecretValue(v.(string), cached, pathString) // update cache path
+				return ExtractKeyWhenJson(v.(string), cached)
 			}
-			if provider.IsSecret(v) {
+			if provider.IsSecret(v.(string)) {
 				log.Infof("Fetching secret %s ", v)
-				secretValue, err := provider.GetSecret(v)
-				tree.Metadata.DataKey[v] = secretValue
-				return secretValue, err
+				if secretValue, err = provider.GetSecret(v.(string)); err != nil {
+					return nil, err
+				}
+				tree.CacheSecretValue(v.(string), secretValue, pathString)
+				return ExtractKeyWhenJson(v.(string), secretValue)
 			}
 			return v, nil
 
@@ -258,4 +271,34 @@ func (tree Tree) Decrypt(provider provider.API) error {
 		}
 	}
 	return nil
+}
+
+func (tree Tree) GetCache() []byte {
+	out := bytes.NewBuffer([]byte(""))
+	for _, secret := range tree.Cache {
+		for _, path := range secret.Path {
+			c := fmt.Sprintf("%s\t%s\n", path.FullPath, path.FullKey)
+			out.WriteString(c)
+		}
+	}
+	return out.Bytes()
+}
+
+func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
+	var re = regexp.MustCompile(`@.+`)
+	baseKey := re.ReplaceAllString(fullKey, ``)
+
+	pathSecret := []PathSecret{{FullKey: fullKey, FullPath: path}}
+	if stored, ok := tree.Cache[baseKey]; ok {
+		pathSecret = append(stored.Path, pathSecret...)
+	}
+	tree.Cache[baseKey] = CachedSecret{Value: value, Path: pathSecret}
+	return
+}
+
+func (tree *Tree) IsCached(key string) (string, bool) {
+	var re = regexp.MustCompile(`@.+`)
+	key = re.ReplaceAllString(key, ``)
+	secret, found := tree.Cache[key]
+	return secret.Value, found
 }

@@ -235,29 +235,6 @@ func (store Store) reindentJSON(in []byte) ([]byte, error) {
 
 // LoadEncryptedFile loads an encrypted secrets file onto a sops.Tree object
 func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
-	// Because we don't know what fields the input file will have, we have to
-	// load the file in two steps.
-	// First, we load the file's metadata, the structure of which is known.
-	metadataHolder := stores.SopsFile{}
-	err := json.Unmarshal(in, &metadataHolder)
-	if err != nil {
-		if err, ok := err.(*json.UnmarshalTypeError); ok {
-			if err.Value == "number" && err.Struct == "Metadata" && err.Field == "version" {
-				return sops.Tree{},
-					fmt.Errorf("SOPS versions higher than 2.0.10 can not automatically decrypt JSON files " +
-						"created with SOPS 1.x. In order to be able to decrypt this file, you can either edit it " +
-						"manually and make sure the JSON value under `sops -> version` is a string and not a " +
-						"number, or you can rotate the file's key with any version of SOPS between 2.0 and 2.0.10 " +
-						"using `sops -r your_file.json`")
-			}
-		}
-		return sops.Tree{}, fmt.Errorf("Error unmarshalling input json: %s", err)
-	}
-	metadata, err := metadataHolder.Metadata.ToInternal()
-	if err != nil {
-		return sops.Tree{}, err
-	}
-	// After that, we load the whole file into a map.
 	branch, err := store.treeBranchFromJSON(in)
 	if err != nil {
 		return sops.Tree{}, fmt.Errorf("Could not unmarshal input data: %s", err)
@@ -272,7 +249,7 @@ func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
 		Branches: sops.TreeBranches{
 			branch,
 		},
-		Metadata: metadata,
+		Cache: make(map[string]sops.CachedSecret, 0),
 	}, nil
 }
 
@@ -290,8 +267,7 @@ func (store *Store) LoadPlainFile(in []byte) (sops.TreeBranches, error) {
 // EmitEncryptedFile returns the encrypted bytes of the json file corresponding to a
 // sops.Tree runtime object
 func (store *Store) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
-	tree := append(in.Branches[0], sops.TreeItem{Key: "sops", Value: stores.MetadataFromInternal(in.Metadata)})
-	out, err := store.jsonFromTreeBranch(tree)
+	out, err := store.jsonFromTreeBranch(in.Branches[0])
 	if err != nil {
 		return nil, fmt.Errorf("Error marshaling to json: %s", err)
 	}

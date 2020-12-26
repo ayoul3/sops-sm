@@ -1,17 +1,28 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/ayoul3/sops-sm/lib"
-	"github.com/ayoul3/sops-sm/provider/ssm"
+	"github.com/ayoul3/sops-sm/provider"
 )
 
+var decrypt, encrypt bool
+var filePath string
+
+func init() {
+	flag.BoolVar(&decrypt, "d", true, "Decode the input file")
+	flag.BoolVar(&encrypt, "e", false, "Encode the input file - need .cache file genrated by decoding process")
+	flag.Parse()
+	ValidateParams()
+}
+
 func main() {
-	provider := ssm.NewClient(ssm.NewAPI())
-	loader, err := lib.GetStore("test.yaml")
+	providerClient := provider.Init()
+	loader, err := lib.GetStore(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,7 +31,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	out, err := lib.DecryptTree(provider, loader, tree)
-	fmt.Println(out)
-	fmt.Println(err)
+	if err = lib.DecryptTree(providerClient, loader, tree); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ValidateParams() {
+	if flag.NArg() == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
+	filePath = flag.Arg(0)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		flag.Usage()
+		log.Fatalf("input file %s does not exist", filePath)
+	}
 }

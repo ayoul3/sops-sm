@@ -8,6 +8,8 @@ require (
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
+	github.com/pkg/errors v0.9.1
+	github.com/prometheus/common v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060

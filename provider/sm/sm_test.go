@@ -18,14 +18,14 @@ var _ = Describe("SM", func() {
 	Describe("GetSecret", func() {
 		Context("When the client fails", func() {
 			It("should return an error", func() {
-				client := sm.NewClient(&sm.MockClient{GetSecretShouldFail: true})
+				client := sm.NewClient(&sm.MockClient{GetSecretShouldFail: true}, "eu-west-1")
 				_, err := client.GetSecret("test")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 		Context("When the call succeeds", func() {
 			It("it should return the secret", func() {
-				client := sm.NewClient(&sm.MockClient{})
+				client := sm.NewClient(&sm.MockClient{}, "eu-west-1")
 				secret, err := client.GetSecret("test")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(secret).To(Equal(sm.MockSecretValue))
