@@ -222,7 +222,7 @@ func (tree *Tree) IsCached(key string) (string, bool) {
 	return secret.Value, found
 }
 
-func (tree *Tree) LoadCache(fileReader io.Reader) (err error) {
+func (tree *Tree) LoadCache(fileReader io.Reader) {
 	tree.Cache = make(map[string]CachedSecret, 0)
 	scanner := bufio.NewScanner(fileReader)
 	for scanner.Scan() {
@@ -233,5 +233,4 @@ func (tree *Tree) LoadCache(fileReader io.Reader) (err error) {
 		}
 		tree.Cache[line[0]] = CachedSecret{Value: line[1]}
 	}
-	return nil
 }

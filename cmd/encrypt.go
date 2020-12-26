@@ -49,9 +49,7 @@ func LoadPlainFile(h *Handler, loader stores.StoreAPI) (tree *sops.Tree, err err
 	}
 	defer cacheReader.Close()
 
-	if err = tree.LoadCache(cacheReader); err != nil {
-		return nil, errors.Wrap(err, "LoadPlainFile: Error loading cache file ")
-	}
+	tree.LoadCache(cacheReader)
 	tree.FilePath = loader.GetFilePath()
 	return tree, nil
 }
