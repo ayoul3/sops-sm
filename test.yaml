@@ -1,7 +1,0 @@
-values:
--   key1: value1
--   key2: secretvalue
--   key4: value1
--   key5: name
-extra: top
-# - key3: arn:aws:ssm:eu-west-3:886477354405:parameter/key3

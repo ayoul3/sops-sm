@@ -1,0 +1,9 @@
+{
+	"values": {
+		"name": "arn:aws:ssm:eu-west-1:886477354405:parameter/key1",
+		"names": [
+			"arn:aws:ssm:eu-west-1:886477354405:parameter/key-json@user",
+			"arn:aws:ssm:eu-west-1:886477354405:parameter/key-json@user"
+		]
+	}
+}

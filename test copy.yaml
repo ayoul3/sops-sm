@@ -1,7 +1,0 @@
-values:
-  - key1: arn:aws:ssm:eu-west-1:886477354405:parameter/key1
-  - key2: arn:aws:ssm:eu-west-1:886477354405:parameter/key-json@pass
-  - key4: arn:aws:ssm:eu-west-1:886477354405:parameter/key1
-  - key5: arn:aws:ssm:eu-west-1:886477354405:parameter/key-json@user
-extra: top
-# - key3: arn:aws:ssm:eu-west-3:886477354405:parameter/key3
