@@ -17,4 +17,5 @@ require (
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
 	go.mozilla.org/sops/v3 v3.6.1
 	google.golang.org/appengine v1.6.1
+	gopkg.in/yaml.v2 v2.3.0
 )

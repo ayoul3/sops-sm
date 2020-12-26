@@ -1,4 +1,4 @@
-package json //import "go.mozilla.org/sops/v3/stores/json"
+package json
 
 import (
 	"bytes"
@@ -19,11 +19,6 @@ func NewStore() stores.StoreAPI {
 	return &Store{}
 }
 
-// BinaryStore handles storage of binary data in a JSON envelope.
-type BinaryStore struct {
-	store Store
-}
-
 func (store *Store) GetFilePath() string {
 	return store.path
 }
@@ -34,27 +29,6 @@ func (store *Store) GetCachePath() string {
 
 func (store *Store) SetFilePath(p string) {
 	store.path = p
-}
-
-// LoadFile loads an encrypted json file onto a sops.Tree object
-func (store BinaryStore) LoadFile(in []byte) (*sops.Tree, error) {
-	return store.store.LoadFile(in)
-}
-
-// EmitFile produces an encrypted json file's bytes from its corresponding sops.Tree object
-func (store BinaryStore) EmitFile(in *sops.Tree) ([]byte, error) {
-	return store.store.EmitFile(in)
-}
-
-// EmitValue extracts a value from a generic interface{} object representing a structured set
-// of binary files
-func (store BinaryStore) EmitValue(v interface{}) ([]byte, error) {
-	return nil, fmt.Errorf("Binary files are not structured and extracting a single value is not possible")
-}
-
-// EmitExample returns the example's plaintext json file bytes
-func (store BinaryStore) EmitExample() []byte {
-	return []byte("Welcome to SOPS! Edit this file as you please!")
 }
 
 func (store Store) sliceFromJSONDecoder(dec *json.Decoder) ([]interface{}, error) {
@@ -220,12 +194,6 @@ func (store *Store) LoadFile(in []byte) (*sops.Tree, error) {
 	if err != nil {
 		return &sops.Tree{}, fmt.Errorf("Could not unmarshal input data: %s", err)
 	}
-	// Discard metadata, as we already loaded it.
-	for i, item := range branch {
-		if item.Key == "sops" {
-			branch = append(branch[:i], branch[i+1:]...)
-		}
-	}
 	return &sops.Tree{
 		Branches: sops.TreeBranches{
 			branch,
@@ -242,23 +210,4 @@ func (store *Store) EmitFile(in *sops.Tree) ([]byte, error) {
 		return nil, fmt.Errorf("Error marshaling to json: %s", err)
 	}
 	return out, nil
-}
-
-// EmitValue returns bytes corresponding to a single encoded value
-// in a generic interface{} object
-func (store *Store) EmitValue(v interface{}) ([]byte, error) {
-	s, err := store.encodeValue(v)
-	if err != nil {
-		return nil, err
-	}
-	return store.reindentJSON(s)
-}
-
-// EmitExample returns the bytes corresponding to an example complex tree
-func (store *Store) EmitExample() []byte {
-	bytes, err := store.EmitFile(&stores.ExampleComplexTree)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
 }

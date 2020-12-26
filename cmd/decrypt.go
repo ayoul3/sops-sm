@@ -18,7 +18,6 @@ func HandleDecrypt(filePath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	tree, err := LoadEncryptedFile(loader)
 	if err != nil {
 		log.Fatal(err)
@@ -47,11 +46,11 @@ func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree)
 		return err
 	}
 	cacheContent := tree.GetCache()
-	return DumpDecryptedFiles(tree.FilePath, content, cacheContent)
+	cacheFile := loader.GetCachePath()
+	return DumpDecryptedFiles(tree.FilePath, cacheFile, content, cacheContent)
 }
 
-func DumpDecryptedFiles(file string, content, cacheContent []byte) (err error) {
-	cacheFile := file + ".cache"
+func DumpDecryptedFiles(file, cacheFile string, content, cacheContent []byte) (err error) {
 	if err = ioutil.WriteFile(cacheFile, cacheContent, 0644); err != nil {
 		return errors.Wrapf(err, "Could not write to file %s", cacheFile)
 	}

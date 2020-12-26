@@ -150,19 +150,3 @@ func (store *Store) EmitFile(in *sops.Tree) ([]byte, error) {
 	}
 	return out, nil
 }
-
-// EmitValue returns bytes corresponding to a single encoded value
-// in a generic interface{} object
-func (store *Store) EmitValue(v interface{}) ([]byte, error) {
-	v = store.treeValueToYamlValue(v)
-	return (&yaml.YAMLMarshaler{Indent: 4}).Marshal(v)
-}
-
-// EmitExample returns the bytes corresponding to an example complex tree
-func (store *Store) EmitExample() []byte {
-	bytes, err := store.EmitFile(&stores.ExampleComplexTree)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
-}

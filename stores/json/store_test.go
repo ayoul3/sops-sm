@@ -1,320 +1,90 @@
 package json
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/ayoul3/sops-sm/sops"
-	"github.com/stretchr/testify/assert"
+
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 )
 
-func TestDecodeJSON(t *testing.T) {
-	in := `
+var PLAIN = []byte(`
 {
-   "glossary":{
-      "title":"example glossary",
-      "GlossDiv":{
-         "title":"S",
-         "GlossList":{
-            "GlossEntry":{
-               "ID":"SGML",
-               "SortAs":"SGML",
-               "GlossTerm":"Standard Generalized Markup Language",
-               "Acronym":"SGML",
-               "Abbrev":"ISO 8879:1986",
-               "GlossDef":{
-                  "para":"A meta-markup language, used to create markup languages such as DocBook.",
-                  "GlossSeeAlso":[
-                     "GML",
-                     "XML"
-                  ]
-               },
-               "GlossSee":"markup"
-            }
-         }
-      }
-   }
-}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key: "glossary",
-			Value: sops.TreeBranch{
-				sops.TreeItem{
-					Key:   "title",
-					Value: "example glossary",
-				},
-				sops.TreeItem{
-					Key: "GlossDiv",
-					Value: sops.TreeBranch{
-						sops.TreeItem{
-							Key:   "title",
-							Value: "S",
-						},
-						sops.TreeItem{
-							Key: "GlossList",
-							Value: sops.TreeBranch{
-								sops.TreeItem{
-									Key: "GlossEntry",
-									Value: sops.TreeBranch{
-										sops.TreeItem{
-											Key:   "ID",
-											Value: "SGML",
-										},
-										sops.TreeItem{
-											Key:   "SortAs",
-											Value: "SGML",
-										},
-										sops.TreeItem{
-											Key:   "GlossTerm",
-											Value: "Standard Generalized Markup Language",
-										},
-										sops.TreeItem{
-											Key:   "Acronym",
-											Value: "SGML",
-										},
-										sops.TreeItem{
-											Key:   "Abbrev",
-											Value: "ISO 8879:1986",
-										},
-										sops.TreeItem{
-											Key: "GlossDef",
-											Value: sops.TreeBranch{
-												sops.TreeItem{
-													Key:   "para",
-													Value: "A meta-markup language, used to create markup languages such as DocBook.",
-												},
-												sops.TreeItem{
-													Key: "GlossSeeAlso",
-													Value: []interface{}{
-														"GML",
-														"XML",
-													},
-												},
-											},
-										},
-										sops.TreeItem{
-											Key:   "GlossSee",
-											Value: "markup",
-										},
-									},
-								},
-							},
-						},
-					},
+"hello": "Welcome to SOPS! Edit this file as you please!",
+"example_key": "example_value",
+"example_array": [
+	"example_value1",
+	"example_value2"
+],
+"example_number": 1234.56789,
+"example_booleans": [
+	true,
+	false
+]
+}`)
+var ExampleComplexTree = sops.Tree{
+	Branches: sops.TreeBranches{
+		sops.TreeBranch{
+			sops.TreeItem{
+				Key:   "hello",
+				Value: `Welcome to SOPS! Edit this file as you please!`,
+			},
+			sops.TreeItem{
+				Key:   "example_key",
+				Value: "example_value",
+			},
+			sops.TreeItem{
+				Key: "example_array",
+				Value: []interface{}{
+					"example_value1",
+					"example_value2",
 				},
 			},
-		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
-}
-
-func TestDecodeSimpleJSONObject(t *testing.T) {
-	in := `{"foo": "bar", "baz": 2}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key:   "foo",
-			Value: "bar",
-		},
-		sops.TreeItem{
-			Key:   "baz",
-			Value: 2.0,
-		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
-}
-
-func TestDecodeNumber(t *testing.T) {
-	in := `42`
-	_, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.NotNil(t, err)
-}
-
-func TestDecodeNestedJSONObject(t *testing.T) {
-	in := `{"foo": {"foo": "bar"}}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key: "foo",
-			Value: sops.TreeBranch{
-				sops.TreeItem{
-					Key:   "foo",
-					Value: "bar",
-				},
+			sops.TreeItem{
+				Key:   "example_number",
+				Value: 1234.56789,
+			},
+			sops.TreeItem{
+				Key:   "example_booleans",
+				Value: []interface{}{true, false},
 			},
 		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
+	},
 }
 
-func TestDecodeJSONWithArray(t *testing.T) {
-	in := `{"foo": {"foo": [1, 2, 3]}, "bar": "baz"}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key: "foo",
-			Value: sops.TreeBranch{
-				sops.TreeItem{
-					Key:   "foo",
-					Value: []interface{}{1.0, 2.0, 3.0},
-				},
-			},
-		},
-		sops.TreeItem{
-			Key:   "bar",
-			Value: "baz",
-		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
+func TestYAML(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecsWithDefaultAndCustomReporters(t, "Json", []Reporter{reporters.NewJUnitReporter("test_report-json.xml")})
 }
 
-func TestDecodeJSONArrayOfObjects(t *testing.T) {
-	in := `{"foo": [{"bar": "foo"}, {"foo": "bar"}]}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key: "foo",
-			Value: []interface{}{
-				sops.TreeBranch{
-					sops.TreeItem{
-						Key:   "bar",
-						Value: "foo",
-					},
-				},
-				sops.TreeBranch{
-					sops.TreeItem{
-						Key:   "foo",
-						Value: "bar",
-					},
-				},
-			},
-		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
-}
+var _ = Describe("LoadFile", func() {
+	Context("When loading plain file succeeds", func() {
+		It("should return corresponding branches", func() {
+			tree, err := (&Store{}).LoadFile(PLAIN)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(tree.Branches).To(Equal(ExampleComplexTree.Branches))
+		})
+	})
+	Context("When loading plain file fails", func() {
+		It("should return an error", func() {
+			_, err := (&Store{}).LoadFile([]byte(`{"key1": "value"`))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
 
-func TestDecodeJSONArrayOfArrays(t *testing.T) {
-	in := `{"foo": [[["foo", {"bar": "foo"}]]]}`
-	expected := sops.TreeBranch{
-		sops.TreeItem{
-			Key: "foo",
-			Value: []interface{}{
-				[]interface{}{
-					[]interface{}{
-						"foo",
-						sops.TreeBranch{
-							sops.TreeItem{
-								Key:   "bar",
-								Value: "foo",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-	branch, err := Store{}.treeBranchFromJSON([]byte(in))
-	assert.Nil(t, err)
-	assert.Equal(t, expected, branch)
-}
-
-func TestEncodeSimpleJSON(t *testing.T) {
-	branch := sops.TreeBranch{
-		sops.TreeItem{
-			Key:   "foo",
-			Value: "bar",
-		},
-		sops.TreeItem{
-			Key:   "foo",
-			Value: 3.0,
-		},
-		sops.TreeItem{
-			Key:   "bar",
-			Value: false,
-		},
-	}
-	out, err := Store{}.jsonFromTreeBranch(branch)
-	assert.Nil(t, err)
-	expected, _ := Store{}.treeBranchFromJSON(out)
-	assert.Equal(t, expected, branch)
-}
-
-func TestEncodeJSONWithEscaping(t *testing.T) {
-	branch := sops.TreeBranch{
-		sops.TreeItem{
-			Key:   "foo\\bar",
-			Value: "value",
-		},
-		sops.TreeItem{
-			Key:   "a_key_with\"quotes\"",
-			Value: 4.0,
-		},
-		sops.TreeItem{
-			Key:   "baz\\\\foo",
-			Value: 2.0,
-		},
-	}
-	out, err := Store{}.jsonFromTreeBranch(branch)
-	assert.Nil(t, err)
-	expected, _ := Store{}.treeBranchFromJSON(out)
-	assert.Equal(t, expected, branch)
-}
-
-func TestEncodeJSONArrayOfObjects(t *testing.T) {
-	tree := sops.Tree{
-		Branches: sops.TreeBranches{
-			sops.TreeBranch{
-				sops.TreeItem{
-					Key: "foo",
-					Value: []interface{}{
-						sops.TreeBranch{
-							sops.TreeItem{
-								Key:   "foo",
-								Value: 3,
-							},
-							sops.TreeItem{
-								Key:   "bar",
-								Value: false,
-							},
-						},
-						2,
-					},
-				},
-			},
-		},
-	}
-	expected := `{
-	"foo": [
-		{
-			"foo": 3,
-			"bar": false
-		},
-		2
-	]
-}`
-	store := Store{}
-	out, err := store.EmitPlainFile(tree.Branches)
-	assert.Nil(t, err)
-	assert.Equal(t, expected, string(out))
-}
-
-func TestLoadJSONFormattedBinaryFile(t *testing.T) {
-	// This is JSON data, but we want SOPS to interpret it as binary,
-	// e.g. because the --input-type binary flag was provided.
-	data := []byte(`{"hello": 2}`)
-	store := BinaryStore{}
-	branches, err := store.LoadPlainFile(data)
-	assert.Nil(t, err)
-	assert.Equal(t, "data", branches[0][0].Key)
-}
-
-func TestEmitValueString(t *testing.T) {
-	bytes, err := (&Store{}).EmitValue("hello")
-	assert.Nil(t, err)
-	assert.Equal(t, []byte("\"hello\""), bytes)
-}
+var _ = Describe("EmitFile", func() {
+	Context("When loading a tree succeeds", func() {
+		It("should return a yaml file", func() {
+			var generic interface{}
+			content, err := (&Store{}).EmitFile(&ExampleComplexTree)
+			Expect(err).ToNot(HaveOccurred())
+			err = json.Unmarshal(content, &generic)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(content).To(ContainSubstring(`"example_key": "example_value"`))
+		})
+	})
+})

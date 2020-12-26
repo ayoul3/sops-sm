@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <testsuite name="AWS/SSM" tests="3" failures="0" errors="0" time="0">
-      <testcase name="SSM GetSecret When the client fails should return an error" classname="AWS/SSM" time="2.53e-05"></testcase>
-      <testcase name="SSM GetSecret When the keys contains an index it should return the secret" classname="AWS/SSM" time="3.94e-05"></testcase>
-      <testcase name="SSM GetSecret When the call succeeds it should return the secret" classname="AWS/SSM" time="3.81e-05"></testcase>
+      <testcase name="SSM GetSecret When the client fails should return an error" classname="AWS/SSM" time="0.0001576"></testcase>
+      <testcase name="SSM GetSecret When the keys contains an index it should return the secret" classname="AWS/SSM" time="0.0001105"></testcase>
+      <testcase name="SSM GetSecret When the call succeeds it should return the secret" classname="AWS/SSM" time="2.31e-05"></testcase>
   </testsuite>
