@@ -5,10 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/ayoul3/sops-sm/provider"
 	log "github.com/sirupsen/logrus"
@@ -48,116 +46,6 @@ type Tree struct {
 	Branches TreeBranches
 	// FilePath is the path of the file this struct represents
 	FilePath string
-}
-
-// Metadata holds information about a file encrypted by sops
-type Metadata struct {
-	LastModified time.Time
-	Version      string
-	// DataKey caches the decrypted data key so it doesn't have to be decrypted with a master key every time it's needed
-	DataKey map[string]string
-}
-
-func valueFromPathAndLeaf(path []interface{}, leaf interface{}) interface{} {
-	switch component := path[0].(type) {
-	case int:
-		if len(path) == 1 {
-			return []interface{}{
-				leaf,
-			}
-		}
-		return []interface{}{
-			valueFromPathAndLeaf(path[1:], leaf),
-		}
-	default:
-		if len(path) == 1 {
-			return TreeBranch{
-				TreeItem{
-					Key:   component,
-					Value: leaf,
-				},
-			}
-		}
-		return TreeBranch{
-			TreeItem{
-				Key:   component,
-				Value: valueFromPathAndLeaf(path[1:], leaf),
-			},
-		}
-	}
-}
-
-func set(branch interface{}, path []interface{}, value interface{}) interface{} {
-	switch branch := branch.(type) {
-	case TreeBranch:
-		for i, item := range branch {
-			if item.Key == path[0] {
-				if len(path) == 1 {
-					branch[i].Value = value
-				} else {
-					branch[i].Value = set(item.Value, path[1:], value)
-				}
-				return branch
-			}
-		}
-		// Not found, need to add the next path entry to the branch
-		if len(path) == 1 {
-			return append(branch, TreeItem{Key: path[0], Value: value})
-		}
-		return valueFromPathAndLeaf(path, value)
-	case []interface{}:
-		position := path[0].(int)
-		if len(path) == 1 {
-			if position >= len(branch) {
-				return append(branch, value)
-			}
-			branch[position] = value
-		} else {
-			if position >= len(branch) {
-				branch = append(branch, valueFromPathAndLeaf(path[1:], value))
-			}
-			branch[position] = set(branch[position], path[1:], value)
-		}
-		return branch
-	default:
-		return valueFromPathAndLeaf(path, value)
-	}
-}
-
-// Set sets a value on a given tree for the specified path
-func (branch TreeBranch) Set(path []interface{}, value interface{}) TreeBranch {
-	return set(branch, path, value).(TreeBranch)
-}
-
-// Truncate truncates the tree to the path specified
-func (branch TreeBranch) Truncate(path []interface{}) (interface{}, error) {
-	log.WithField("path", path).Info("Truncating tree")
-	var current interface{} = branch
-	for _, component := range path {
-		switch component := component.(type) {
-		case string:
-			found := false
-			for _, item := range current.(TreeBranch) {
-				if item.Key == component {
-					current = item.Value
-					found = true
-					break
-				}
-			}
-			if !found {
-				return nil, fmt.Errorf("component ['%s'] not found", component)
-			}
-		case int:
-			if reflect.ValueOf(current).Kind() != reflect.Slice {
-				return nil, fmt.Errorf("component [%d] is integer, but tree part is not a slice", component)
-			}
-			if reflect.ValueOf(current).Len() <= component {
-				return nil, fmt.Errorf("component [%d] accesses out of bounds", component)
-			}
-			current = reflect.ValueOf(current).Index(component).Interface()
-		}
-	}
-	return current, nil
 }
 
 func (branch TreeBranch) walkValue(in interface{}, path []string, onLeaves func(in interface{}, path []string) (interface{}, error)) (interface{}, error) {
