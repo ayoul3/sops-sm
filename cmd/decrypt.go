@@ -35,7 +35,7 @@ func LoadEncryptedFile(loader stores.StoreAPI) (*sops.Tree, error) {
 	}
 	tree, err := loader.LoadFile(fileBytes)
 	tree.FilePath = loader.GetFilePath()
-	return &tree, err
+	return tree, err
 }
 
 func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (err error) {
@@ -43,7 +43,7 @@ func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree)
 	if err = tree.Decrypt(provider); err != nil {
 		return err
 	}
-	if content, err = loader.EmitPlainFile(tree.Branches); err != nil {
+	if content, err = loader.EmitFile(tree); err != nil {
 		return err
 	}
 	cacheContent := tree.GetCache()

@@ -28,8 +28,7 @@ func HandleEncrypt(filePath string) {
 	}
 }
 
-func LoadPlainFile(loader stores.StoreAPI) (outTree *sops.Tree, err error) {
-	var tree sops.Tree
+func LoadPlainFile(loader stores.StoreAPI) (tree *sops.Tree, err error) {
 	fileBytes, err := ioutil.ReadFile(loader.GetFilePath())
 	if err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error reading file ")
@@ -41,7 +40,7 @@ func LoadPlainFile(loader stores.StoreAPI) (outTree *sops.Tree, err error) {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error loading cache file ")
 	}
 	tree.FilePath = loader.GetFilePath()
-	return &tree, nil
+	return tree, nil
 }
 
 func EncryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (err error) {
@@ -49,7 +48,7 @@ func EncryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree)
 	if err = tree.Encrypt(provider); err != nil {
 		return err
 	}
-	if content, err = loader.EmitPlainFile(tree.Branches); err != nil {
+	if content, err = loader.EmitFile(tree); err != nil {
 		return err
 	}
 	return DumpPlainFile(tree.FilePath, content)

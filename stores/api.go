@@ -6,21 +6,15 @@ import "github.com/ayoul3/sops-sm/sops"
 // way to load encrypted SOPS files into the internal SOPS representation. Because it
 // loads encrypted files, the returned data structure already contains all SOPS
 // metadata.
-type EncryptedFileLoader interface {
-	LoadFile(in []byte) (sops.Tree, error)
-}
-
-// EncryptedFileEmitter is the interface for emitting encrypting files. It provides a
-// way to emit encrypted files from the internal SOPS representation.
-type EncryptedFileEmitter interface {
-	EmitEncryptedFile(sops.Tree) ([]byte, error)
+type FileLoader interface {
+	LoadFile(in []byte) (*sops.Tree, error)
 }
 
 // PlainFileEmitter is the interface for emitting plain text files. It provides a way
 // to emit plain text files from the internal SOPS representation so that they can be
 // shown
-type PlainFileEmitter interface {
-	EmitPlainFile(sops.TreeBranches) ([]byte, error)
+type FileEmitter interface {
+	EmitFile(*sops.Tree) ([]byte, error)
 }
 
 // ValueEmitter is the interface for emitting a value. It provides a way to emit
@@ -42,9 +36,8 @@ type FilePathGetter interface {
 
 // Store is used to interact with files, both encrypted and unencrypted.
 type StoreAPI interface {
-	EncryptedFileLoader
-	EncryptedFileEmitter
-	PlainFileEmitter
+	FileLoader
+	FileEmitter
 	ValueEmitter
 	FilePathSetter
 	FilePathGetter

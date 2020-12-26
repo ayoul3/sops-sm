@@ -37,24 +37,13 @@ func (store *Store) SetFilePath(p string) {
 }
 
 // LoadFile loads an encrypted json file onto a sops.Tree object
-func (store BinaryStore) LoadFile(in []byte) (sops.Tree, error) {
+func (store BinaryStore) LoadFile(in []byte) (*sops.Tree, error) {
 	return store.store.LoadFile(in)
 }
 
-// EmitEncryptedFile produces an encrypted json file's bytes from its corresponding sops.Tree object
-func (store BinaryStore) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
-	return store.store.EmitEncryptedFile(in)
-}
-
-// EmitPlainFile produces plaintext json file's bytes from its corresponding sops.TreeBranches object
-func (store BinaryStore) EmitPlainFile(in sops.TreeBranches) ([]byte, error) {
-	// JSON stores a single object per file
-	for _, item := range in[0] {
-		if item.Key == "data" {
-			return []byte(item.Value.(string)), nil
-		}
-	}
-	return nil, fmt.Errorf("No binary data found in tree")
+// EmitFile produces an encrypted json file's bytes from its corresponding sops.Tree object
+func (store BinaryStore) EmitFile(in *sops.Tree) ([]byte, error) {
+	return store.store.EmitFile(in)
 }
 
 // EmitValue extracts a value from a generic interface{} object representing a structured set
@@ -226,10 +215,10 @@ func (store Store) reindentJSON(in []byte) ([]byte, error) {
 }
 
 // LoadEncryptedFile loads an encrypted secrets file onto a sops.Tree object
-func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
+func (store *Store) LoadFile(in []byte) (*sops.Tree, error) {
 	branch, err := store.treeBranchFromJSON(in)
 	if err != nil {
-		return sops.Tree{}, fmt.Errorf("Could not unmarshal input data: %s", err)
+		return &sops.Tree{}, fmt.Errorf("Could not unmarshal input data: %s", err)
 	}
 	// Discard metadata, as we already loaded it.
 	for i, item := range branch {
@@ -237,7 +226,7 @@ func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
 			branch = append(branch[:i], branch[i+1:]...)
 		}
 	}
-	return sops.Tree{
+	return &sops.Tree{
 		Branches: sops.TreeBranches{
 			branch,
 		},
@@ -245,20 +234,10 @@ func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
 	}, nil
 }
 
-// EmitEncryptedFile returns the encrypted bytes of the json file corresponding to a
+// EmitFile returns the encrypted bytes of the json file corresponding to a
 // sops.Tree runtime object
-func (store *Store) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
+func (store *Store) EmitFile(in *sops.Tree) ([]byte, error) {
 	out, err := store.jsonFromTreeBranch(in.Branches[0])
-	if err != nil {
-		return nil, fmt.Errorf("Error marshaling to json: %s", err)
-	}
-	return out, nil
-}
-
-// EmitPlainFile returns the plaintext bytes of the json file corresponding to a
-// sops.TreeBranches runtime object
-func (store *Store) EmitPlainFile(in sops.TreeBranches) ([]byte, error) {
-	out, err := store.jsonFromTreeBranch(in[0])
 	if err != nil {
 		return nil, fmt.Errorf("Error marshaling to json: %s", err)
 	}
@@ -277,7 +256,7 @@ func (store *Store) EmitValue(v interface{}) ([]byte, error) {
 
 // EmitExample returns the bytes corresponding to an example complex tree
 func (store *Store) EmitExample() []byte {
-	bytes, err := store.EmitPlainFile(stores.ExampleComplexTree.Branches)
+	bytes, err := store.EmitFile(&stores.ExampleComplexTree)
 	if err != nil {
 		panic(err)
 	}

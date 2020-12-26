@@ -118,24 +118,24 @@ func (store Store) treeBranchToYamlMap(in sops.TreeBranch) yaml.MapSlice {
 	return branch
 }
 
-func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
+func (store *Store) LoadFile(in []byte) (*sops.Tree, error) {
 	var data []yaml.MapSlice
 	if err := (yaml.CommentUnmarshaler{}).UnmarshalDocuments(in, &data); err != nil {
-		return sops.Tree{}, fmt.Errorf("Error unmarshaling input YAML: %s", err)
+		return &sops.Tree{}, fmt.Errorf("Error unmarshaling input YAML: %s", err)
 	}
 	var branches sops.TreeBranches
 	for _, doc := range data {
 		branches = append(branches, store.mapSliceToTreeBranch(doc))
 	}
-	return sops.Tree{
+	return &sops.Tree{
 		Branches: branches,
 		Cache:    make(map[string]sops.CachedSecret, 0),
 	}, nil
 }
 
-// EmitEncryptedFile returns the encrypted bytes of the yaml file corresponding to a
+// EmitFile returns the encrypted bytes of the yaml file corresponding to a
 // sops.Tree runtime object
-func (store *Store) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
+func (store *Store) EmitFile(in *sops.Tree) ([]byte, error) {
 	out := []byte{}
 	for i, branch := range in.Branches {
 		if i > 0 {
@@ -151,24 +151,6 @@ func (store *Store) EmitEncryptedFile(in sops.Tree) ([]byte, error) {
 	return out, nil
 }
 
-// EmitPlainFile returns the plaintext bytes of the yaml file corresponding to a
-// sops.TreeBranches runtime object
-func (store *Store) EmitPlainFile(branches sops.TreeBranches) ([]byte, error) {
-	var out []byte
-	for i, branch := range branches {
-		if i > 0 {
-			out = append(out, "---\n"...)
-		}
-		yamlMap := store.treeBranchToYamlMap(branch)
-		tmpout, err := (&yaml.YAMLMarshaler{Indent: 2}).Marshal(yamlMap)
-		if err != nil {
-			return nil, fmt.Errorf("Error marshaling to yaml: %s", err)
-		}
-		out = append(out[:], tmpout[:]...)
-	}
-	return out, nil
-}
-
 // EmitValue returns bytes corresponding to a single encoded value
 // in a generic interface{} object
 func (store *Store) EmitValue(v interface{}) ([]byte, error) {
@@ -178,7 +160,7 @@ func (store *Store) EmitValue(v interface{}) ([]byte, error) {
 
 // EmitExample returns the bytes corresponding to an example complex tree
 func (store *Store) EmitExample() []byte {
-	bytes, err := store.EmitPlainFile(stores.ExampleComplexTree.Branches)
+	bytes, err := store.EmitFile(&stores.ExampleComplexTree)
 	if err != nil {
 		panic(err)
 	}
