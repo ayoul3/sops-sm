@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <testsuite name="AWS/SSM" tests="2" failures="1" errors="0" time="0.001">
-      <testcase name="SSM GetSecret When the client fails should return an error" classname="AWS/SSM" time="0.0001601"></testcase>
-      <testcase name="SSM GetSecret When the call succeeds it should return the secret" classname="AWS/SSM" time="0.0005219">
-          <failure type="Failure">/home/ayoul3/go/doc/sops-sm/provider/ssm/ssm_test.go:27&#xA;Unexpected error:&#xA;    &lt;*errors.errorString | 0xc0000b40d0&gt;: {&#xA;        s: &#34;Badly formatted key test. Could not get region.&#34;,&#xA;    }&#xA;    Badly formatted key test. Could not get region.&#xA;occurred&#xA;/home/ayoul3/go/doc/sops-sm/provider/ssm/ssm_test.go:30</failure>
-      </testcase>
+  <testsuite name="AWS/SSM" tests="4" failures="0" errors="0" time="0">
+      <testcase name="SSM GetSecret When the client fails should return an error" classname="AWS/SSM" time="0.0002413"></testcase>
+      <testcase name="SSM GetSecret When the keys contains an index it should return the secret" classname="AWS/SSM" time="2.7e-05"></testcase>
+      <testcase name="SSM GetSecret When the key is in a different region it should return the secret" classname="AWS/SSM" time="1.21e-05"></testcase>
+      <testcase name="SSM GetSecret When the call succeeds it should return the secret" classname="AWS/SSM" time="1.96e-05"></testcase>
   </testsuite>

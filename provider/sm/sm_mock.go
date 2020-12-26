@@ -1,7 +1,6 @@
 package sm
 
 import (
-	"encoding/base64"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,8 +50,4 @@ func (m *MockClient) DescribeSecret(input *secretsmanager.DescribeSecretInput) (
 	}
 
 	return secret, nil
-}
-
-func b64Encode(input string) string {
-	return base64.StdEncoding.EncodeToString([]byte(input))
 }

@@ -1,7 +1,6 @@
 package ssm
 
 import (
-	"encoding/base64"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -30,8 +29,4 @@ func (m *MockClient) GetParameter(input *ssm.GetParameterInput) (*ssm.GetParamet
 	}
 	output := new(ssm.GetParameterOutput).SetParameter(new(ssm.Parameter).SetValue(secret))
 	return output, nil
-}
-
-func b64Encode(input string) string {
-	return base64.StdEncoding.EncodeToString([]byte(input))
 }

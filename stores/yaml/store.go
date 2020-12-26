@@ -21,6 +21,10 @@ func (store *Store) GetFilePath() string {
 	return store.path
 }
 
+func (store *Store) GetCachePath() string {
+	return store.path + ".cache"
+}
+
 func (store *Store) SetFilePath(p string) {
 	store.path = p
 }

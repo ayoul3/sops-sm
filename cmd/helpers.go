@@ -1,20 +1,13 @@
-package lib
+package cmd
 
 import (
 	"fmt"
 	"path/filepath"
 
 	"github.com/ayoul3/sops-sm/stores"
-	"github.com/ayoul3/sops-sm/stores/json"
-	"github.com/ayoul3/sops-sm/stores/yaml"
 )
 
-var formats = map[string]stores.StoreAPI{
-	"yaml": yaml.NewStore(),
-	"json": json.NewStore(),
-}
-
-func getFileFormat(inputFile string) string {
+func GetFileFormat(inputFile string) string {
 	extension := filepath.Ext(inputFile)
 	if len(extension) < 2 {
 		return ""
@@ -29,7 +22,7 @@ func getFileFormat(inputFile string) string {
 }
 
 func GetStore(inputFile string) (stores.StoreAPI, error) {
-	format := getFileFormat(inputFile)
+	format := GetFileFormat(inputFile)
 	if val, ok := formats[format]; ok {
 		val.SetFilePath(inputFile)
 		return val, nil

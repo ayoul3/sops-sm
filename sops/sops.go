@@ -1,14 +1,17 @@
 package sops
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/ayoul3/sops-sm/provider"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,6 +37,7 @@ type PathSecret struct {
 	FullKey  string
 	FullPath string
 }
+
 type CachedSecret struct {
 	Value string
 	Path  []PathSecret
@@ -226,12 +230,7 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 	return in, nil
 }
 
-// Decrypt walks over the tree and decrypts all values with the provided cipher,
-// except those whose key ends with the UnencryptedSuffix specified on the Metadata struct,
-// those not ending with EncryptedSuffix, if EncryptedSuffix is provided (by default it is not),
-// those not matching EncryptedRegex, if EncryptedRegex is provided (by default it is not),
-// or those matching UnencryptedRegex, if UnencryptedRegex is provided (by default it is not).
-// If decryption is successful, it returns the MAC for the decrypted tree.
+// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
 func (tree Tree) Decrypt(provider provider.API) error {
 	log.Info("Decrypting tree")
 
@@ -273,11 +272,44 @@ func (tree Tree) Decrypt(provider provider.API) error {
 	return nil
 }
 
+// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
+func (tree Tree) Encrypt(provider provider.API) error {
+	log.Info("Encrypting tree")
+
+	walk := func(branch TreeBranch) error {
+		_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
+			var cached CachedSecret
+			var ok, found bool
+
+			pathString := strings.Join(path, ":")
+			log.Infof("Walking path %s ", pathString)
+
+			if v, ok = in.(string); !ok {
+				return in, nil
+			}
+			if cached, found = tree.Cache[pathString]; found {
+				log.Infof("Found secret in cache %s", v)
+				return cached.Value, nil
+			}
+			return v, nil
+
+		})
+		return err
+	}
+	for _, branch := range tree.Branches {
+		err := walk(branch)
+		if err != nil {
+			return fmt.Errorf("Error walking tree: %s", err)
+		}
+	}
+	return nil
+}
+
 func (tree Tree) GetCache() []byte {
 	out := bytes.NewBuffer([]byte(""))
 	for _, secret := range tree.Cache {
 		for _, path := range secret.Path {
-			c := fmt.Sprintf("%s\t%s\n", path.FullPath, path.FullKey)
+			c := fmt.Sprintf("%s,%s\n", path.FullPath, path.FullKey)
 			out.WriteString(c)
 		}
 	}
@@ -301,4 +333,24 @@ func (tree *Tree) IsCached(key string) (string, bool) {
 	key = re.ReplaceAllString(key, ``)
 	secret, found := tree.Cache[key]
 	return secret.Value, found
+}
+
+func (tree *Tree) LoadCache(filePath string) (err error) {
+	var file *os.File
+	if file, err = os.Open(filePath); err != nil {
+		return errors.Wrap(err, "LoadCache")
+	}
+	defer file.Close()
+
+	tree.Cache = make(map[string]CachedSecret, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.Split(strings.Trim(scanner.Text(), "\n"), ",")
+		if len(line) < 2 {
+			log.Warnf("LoadCache: ignoring line %s", line)
+			continue
+		}
+		tree.Cache[line[0]] = CachedSecret{Value: line[1]}
+	}
+	return nil
 }

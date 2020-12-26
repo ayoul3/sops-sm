@@ -9,8 +9,10 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.2.0
+	github.com/prometheus/common v0.4.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/cobra v1.1.1
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.5.1
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
 	go.mozilla.org/sops/v3 v3.6.1

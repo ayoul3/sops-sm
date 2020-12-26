@@ -1,9 +1,9 @@
-package lib
+package cmd
 
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"log"
 
 	"github.com/ayoul3/sops-sm/provider"
 	"github.com/ayoul3/sops-sm/sops"
@@ -11,17 +11,30 @@ import (
 	"github.com/pkg/errors"
 )
 
+func HandleDecrypt(filePath string) {
+	providerClient := provider.Init()
+
+	loader, err := GetStore(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tree, err := LoadEncryptedFile(loader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = DecryptTree(providerClient, loader, tree); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func LoadEncryptedFile(loader stores.StoreAPI) (*sops.Tree, error) {
 	fileBytes, err := ioutil.ReadFile(loader.GetFilePath())
 	if err != nil {
 		return nil, fmt.Errorf("Error reading file: %s", err)
 	}
-	path, err := filepath.Abs(loader.GetFilePath())
-	if err != nil {
-		return nil, err
-	}
 	tree, err := loader.LoadEncryptedFile(fileBytes)
-	tree.FilePath = path
+	tree.FilePath = loader.GetFilePath()
 	return &tree, err
 }
 
@@ -34,10 +47,10 @@ func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree)
 		return err
 	}
 	cacheContent := tree.GetCache()
-	return DumpFiles(tree.FilePath, content, cacheContent)
+	return DumpDecryptedFiles(tree.FilePath, content, cacheContent)
 }
 
-func DumpFiles(file string, content, cacheContent []byte) (err error) {
+func DumpDecryptedFiles(file string, content, cacheContent []byte) (err error) {
 	cacheFile := file + ".cache"
 	if err = ioutil.WriteFile(cacheFile, cacheContent, 0644); err != nil {
 		return errors.Wrapf(err, "Could not write to file %s", cacheFile)

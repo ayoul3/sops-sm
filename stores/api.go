@@ -44,6 +44,7 @@ type FilePathSetter interface {
 // FilePathGetter is the interface for getting the filepath of the loaded file
 type FilePathGetter interface {
 	GetFilePath() string
+	GetCachePath() string
 }
 
 // Store is used to interact with files, both encrypted and unencrypted.
