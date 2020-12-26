@@ -4,7 +4,10 @@ import (
 	"testing"
 
 	"github.com/ayoul3/sops-sm/sops"
-	"github.com/stretchr/testify/assert"
+
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 )
 
 var PLAIN = []byte(`---
@@ -38,8 +41,23 @@ var BRANCHES = sops.TreeBranches{
 	},
 }
 
-func TestLoadPlainFile(t *testing.T) {
-	branches, err := (&Store{}).LoadPlainFile(PLAIN)
-	assert.Nil(t, err)
-	assert.Equal(t, BRANCHES, branches)
+func TestYAML(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecsWithDefaultAndCustomReporters(t, "Yaml", []Reporter{reporters.NewJUnitReporter("test_report-yaml.xml")})
 }
+
+var _ = Describe("LoadFile", func() {
+	Context("When loading plain file succeeds", func() {
+		It("should return corresponding branches", func() {
+			tree, err := (&Store{}).LoadFile(PLAIN)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(tree.Branches).To(Equal(BRANCHES))
+		})
+	})
+	Context("When loading plain file fails", func() {
+		It("should return an error", func() {
+			_, err := (&Store{}).LoadFile([]byte(`---\nkey1: va:lue\n:`))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})

@@ -33,7 +33,7 @@ func LoadEncryptedFile(loader stores.StoreAPI) (*sops.Tree, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading file: %s", err)
 	}
-	tree, err := loader.LoadEncryptedFile(fileBytes)
+	tree, err := loader.LoadFile(fileBytes)
 	tree.FilePath = loader.GetFilePath()
 	return &tree, err
 }

@@ -34,7 +34,7 @@ func LoadPlainFile(loader stores.StoreAPI) (outTree *sops.Tree, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error reading file ")
 	}
-	if tree, err = loader.LoadEncryptedFile(fileBytes); err != nil {
+	if tree, err = loader.LoadFile(fileBytes); err != nil {
 		return nil, errors.Wrap(err, "LoadPlainFile: Error loading file ")
 	}
 	if err = tree.LoadCache(loader.GetCachePath()); err != nil {

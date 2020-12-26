@@ -1,26 +1,8 @@
-/*
-Package stores acts as a layer between the internal representation of encrypted files and the encrypted files
-themselves.
-
-Subpackages implement serialization and deserialization to multiple formats.
-
-This package defines the structure SOPS files should have and conversions to and from the internal representation. Part
-of the purpose of this package is to make it easy to change the SOPS file format while remaining backwards-compatible.
-*/
 package stores
 
 import (
 	"github.com/ayoul3/sops-sm/sops"
 )
-
-type kmskey struct {
-	Arn              string             `yaml:"arn" json:"arn"`
-	Role             string             `yaml:"role,omitempty" json:"role,omitempty"`
-	Context          map[string]*string `yaml:"context,omitempty" json:"context,omitempty"`
-	CreatedAt        string             `yaml:"created_at" json:"created_at"`
-	EncryptedDataKey string             `yaml:"enc" json:"enc"`
-	AwsProfile       string             `yaml:"aws_profile" json:"aws_profile"`
-}
 
 // ExampleComplexTree is an example sops.Tree object exhibiting complex relationships
 var ExampleComplexTree = sops.Tree{

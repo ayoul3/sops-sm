@@ -7,14 +7,7 @@ import "github.com/ayoul3/sops-sm/sops"
 // loads encrypted files, the returned data structure already contains all SOPS
 // metadata.
 type EncryptedFileLoader interface {
-	LoadEncryptedFile(in []byte) (sops.Tree, error)
-}
-
-// PlainFileLoader is the interface for loading of plain text files. It provides a
-// way to load unencrypted files into SOPS. Because the files it loads are
-// unencrypted, the returned data structure does not contain any metadata.
-type PlainFileLoader interface {
-	LoadPlainFile(in []byte) (sops.TreeBranches, error)
+	LoadFile(in []byte) (sops.Tree, error)
 }
 
 // EncryptedFileEmitter is the interface for emitting encrypting files. It provides a
@@ -50,7 +43,6 @@ type FilePathGetter interface {
 // Store is used to interact with files, both encrypted and unencrypted.
 type StoreAPI interface {
 	EncryptedFileLoader
-	PlainFileLoader
 	EncryptedFileEmitter
 	PlainFileEmitter
 	ValueEmitter

@@ -118,41 +118,19 @@ func (store Store) treeBranchToYamlMap(in sops.TreeBranch) yaml.MapSlice {
 	return branch
 }
 
-// LoadEncryptedFile loads the contents of an encrypted yaml file onto a
-// sops.Tree runtime object
-func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
+func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
 	var data []yaml.MapSlice
 	if err := (yaml.CommentUnmarshaler{}).UnmarshalDocuments(in, &data); err != nil {
 		return sops.Tree{}, fmt.Errorf("Error unmarshaling input YAML: %s", err)
 	}
 	var branches sops.TreeBranches
 	for _, doc := range data {
-		for i, item := range doc {
-			if item.Key == "sops" { // Erase
-				doc = append(doc[:i], doc[i+1:]...)
-			}
-		}
 		branches = append(branches, store.mapSliceToTreeBranch(doc))
 	}
 	return sops.Tree{
 		Branches: branches,
 		Cache:    make(map[string]sops.CachedSecret, 0),
 	}, nil
-}
-
-// LoadPlainFile loads the contents of a plaintext yaml file onto a
-// sops.Tree runtime obejct
-func (store *Store) LoadPlainFile(in []byte) (sops.TreeBranches, error) {
-	var data []yaml.MapSlice
-	if err := (yaml.CommentUnmarshaler{}).UnmarshalDocuments(in, &data); err != nil {
-		return nil, fmt.Errorf("Error unmarshaling input YAML: %s", err)
-	}
-
-	var branches sops.TreeBranches
-	for _, doc := range data {
-		branches = append(branches, store.mapSliceToTreeBranch(doc))
-	}
-	return branches, nil
 }
 
 // EmitEncryptedFile returns the encrypted bytes of the yaml file corresponding to a

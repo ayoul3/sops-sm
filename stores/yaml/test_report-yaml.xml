@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <testsuite name="Yaml" tests="2" failures="0" errors="0" time="0">
+      <testcase name="LoadFile When loading plain file succeeds should return corresponding branches" classname="Yaml" time="0.0001613"></testcase>
+      <testcase name="LoadFile When loading plain file fails should return an error" classname="Yaml" time="3.52e-05"></testcase>
+  </testsuite>

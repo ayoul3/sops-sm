@@ -36,22 +36,9 @@ func (store *Store) SetFilePath(p string) {
 	store.path = p
 }
 
-// LoadEncryptedFile loads an encrypted json file onto a sops.Tree object
-func (store BinaryStore) LoadEncryptedFile(in []byte) (sops.Tree, error) {
-	return store.store.LoadEncryptedFile(in)
-}
-
-// LoadPlainFile loads a plaintext json file onto a sops.Tree encapsulated
-// within a sops.TreeBranches object
-func (store BinaryStore) LoadPlainFile(in []byte) (sops.TreeBranches, error) {
-	return sops.TreeBranches{
-		sops.TreeBranch{
-			sops.TreeItem{
-				Key:   "data",
-				Value: string(in),
-			},
-		},
-	}, nil
+// LoadFile loads an encrypted json file onto a sops.Tree object
+func (store BinaryStore) LoadFile(in []byte) (sops.Tree, error) {
+	return store.store.LoadFile(in)
 }
 
 // EmitEncryptedFile produces an encrypted json file's bytes from its corresponding sops.Tree object
@@ -239,7 +226,7 @@ func (store Store) reindentJSON(in []byte) ([]byte, error) {
 }
 
 // LoadEncryptedFile loads an encrypted secrets file onto a sops.Tree object
-func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
+func (store *Store) LoadFile(in []byte) (sops.Tree, error) {
 	branch, err := store.treeBranchFromJSON(in)
 	if err != nil {
 		return sops.Tree{}, fmt.Errorf("Could not unmarshal input data: %s", err)
@@ -255,17 +242,6 @@ func (store *Store) LoadEncryptedFile(in []byte) (sops.Tree, error) {
 			branch,
 		},
 		Cache: make(map[string]sops.CachedSecret, 0),
-	}, nil
-}
-
-// LoadPlainFile loads plaintext json file bytes onto a sops.TreeBranches object
-func (store *Store) LoadPlainFile(in []byte) (sops.TreeBranches, error) {
-	branch, err := store.treeBranchFromJSON(in)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal input data: %s", err)
-	}
-	return sops.TreeBranches{
-		branch,
 	}, nil
 }
 
