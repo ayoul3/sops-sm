@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-  <testsuite name="Yaml" tests="3" failures="0" errors="0" time="0.001">
-      <testcase name="EmitFile When loading a tree succeeds should return a yaml file" classname="Yaml" time="0.0003368"></testcase>
-      <testcase name="LoadFile When loading plain file succeeds should return corresponding branches" classname="Yaml" time="0.0001875"></testcase>
-      <testcase name="LoadFile When loading plain file fails should return an error" classname="Yaml" time="4.68e-05"></testcase>
-  </testsuite>
