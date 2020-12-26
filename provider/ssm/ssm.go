@@ -11,6 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const SSMPatern = "arn:aws:ssm:"
+
 // Client is a SM custom client
 type Client struct {
 	api ssmiface.SSMAPI
@@ -52,7 +54,7 @@ func (c *Client) ExtractPath(key string) (out string) {
 	match := re.FindStringSubmatch(key)
 	if len(match) < 2 {
 		log.Warnf("Badly formatted key %s", key)
-		return ""
+		return key
 	}
 	return match[1]
 }

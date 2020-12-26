@@ -31,14 +31,6 @@ var _ = Describe("SSM", func() {
 				Expect(secret).To(Equal(ssm.MockSecretValue))
 			})
 		})
-		Context("When the key is in a different region", func() {
-			It("it should return the secret", func() {
-				client := ssm.NewClient(&ssm.MockClient{})
-				secret, err := client.GetSecret("arn:aws:ssm:eu-west-3:886477354405:parameter/key1@index")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(secret).To(Equal(ssm.MockSecretValue))
-			})
-		})
 		Context("When the call succeeds", func() {
 			It("it should return the secret", func() {
 				client := ssm.NewClient(&ssm.MockClient{})

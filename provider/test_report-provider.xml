@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <testsuite name="provider" tests="5" failures="0" errors="0" time="0">
+      <testcase name="provider GetSecret When the pattern is not found should return an error about missing region" classname="provider" time="0.0001488"></testcase>
+      <testcase name="provider GetSecret When the pattern is not found should return an error about missing pattern" classname="provider" time="3.55e-05"></testcase>
+      <testcase name="provider IsSecret when it&#39;s a secret should return true for SSM" classname="provider" time="5.3e-06"></testcase>
+      <testcase name="provider IsSecret when it&#39;s a secret should return true for SM" classname="provider" time="1.6e-06"></testcase>
+      <testcase name="provider IsSecret when it&#39;s not a secret should return false" classname="provider" time="1.6e-06"></testcase>
+  </testsuite>

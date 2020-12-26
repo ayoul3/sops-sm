@@ -10,6 +10,8 @@ import (
 	"github.com/prometheus/common/log"
 )
 
+const SMPatern = "arn:aws:secretsmanager:"
+
 // Client is a SM custom client
 type Client struct {
 	api secretsmanageriface.SecretsManagerAPI
@@ -47,7 +49,7 @@ func (c *Client) IsSecret(key string) bool {
 }
 
 func (c *Client) ExtractPath(key string) (out string) {
-	var re = regexp.MustCompile(`arn:aws:secretsmanager:[a-z0-9-]+:\d+:parameter([a-zA-Z0-9/._-]+)`)
+	var re = regexp.MustCompile(`arn:aws:secretsmanager:[a-z0-9-]+:\d+:secret([a-zA-Z0-9/._-]+)`)
 	match := re.FindStringSubmatch(key)
 	if len(match) < 1 {
 		log.Warnf("Badly formatted key %s", key)
