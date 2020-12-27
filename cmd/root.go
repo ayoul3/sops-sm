@@ -4,18 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ayoul3/sops-sm/stores"
-	"github.com/ayoul3/sops-sm/stores/json"
-	"github.com/ayoul3/sops-sm/stores/yaml"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-var formats = map[string]stores.StoreAPI{
-	"yaml": yaml.NewStore(),
-	"json": json.NewStore(),
-}
 var verbose bool
 
 var (
@@ -33,7 +26,9 @@ var (
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			threads, _ := cmd.Flags().GetInt("threads")
-			NewHandler(threads).HandleDecrypt(args[0])
+			overwrite, _ := cmd.Flags().GetBool("overwrite")
+			h := NewHandler(threads, overwrite)
+			h.HandleDecrypt(args[0])
 		},
 	}
 	encrypt = &cobra.Command{
@@ -44,7 +39,9 @@ var (
 			return validateFile(args)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			NewHandler(1).HandleEncrypt(args[0])
+			overwrite, _ := cmd.Flags().GetBool("overwrite")
+			h := NewHandler(1, overwrite)
+			h.HandleEncrypt(args[0])
 		},
 	}
 )
@@ -60,6 +57,7 @@ func init() {
 	rootCmd.AddCommand(encrypt)
 	rootCmd.AddCommand(decrypt)
 	rootCmd.PersistentFlags().Bool("verbose", false, "Show info messages")
+	rootCmd.PersistentFlags().Bool("overwrite", false, "Overwrite input file")
 }
 
 func validateFile(args []string) error {

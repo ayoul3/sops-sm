@@ -117,7 +117,7 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 	return in, nil
 }
 
-// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
+// DecryptAsync walks over the tree and fetches IDs from SecretsManager or ParameterStore
 func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 	log.Info("First walk down the tree to fetch secrets")
 	for _, branch := range tree.Branches {
@@ -135,10 +135,9 @@ func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 	return nil
 }
 
-// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
+// DecryptSync walks over the tree and fetches IDs from SecretsManager or ParameterStore
 func (tree *Tree) DecryptSync(provider provider.API) (err error) {
 	log.Info("Decrypting tree")
-
 	for _, branch := range tree.Branches {
 		if err = WalkerSyncFetchSecret(tree, branch, provider); err != nil {
 			return fmt.Errorf("Error walking tree: %s", err)
@@ -147,6 +146,7 @@ func (tree *Tree) DecryptSync(provider provider.API) (err error) {
 	return nil
 }
 
+// Decrypt either calls DecryptSync or DecryptAsync
 func (tree *Tree) Decrypt(provider provider.API, numThreads int) (err error) {
 	if numThreads > 1 {
 		PrepareAsync(tree, provider, numThreads)
@@ -155,39 +155,18 @@ func (tree *Tree) Decrypt(provider provider.API, numThreads int) (err error) {
 	return tree.DecryptSync(provider)
 }
 
-// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
-func (tree Tree) Encrypt(provider provider.API) error {
+// Encrypt walks over the tree replaces key values from cache
+func (tree *Tree) Encrypt(provider provider.API) (err error) {
 	log.Info("Encrypting tree")
-
-	walk := func(branch TreeBranch) error {
-		_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
-			var cached CachedSecret
-			var ok, found bool
-
-			pathString := strings.Join(path, ":")
-			log.Infof("Walking path %s ", pathString)
-
-			if v, ok = in.(string); !ok {
-				return in, nil
-			}
-			if cached, found = tree.Cache[pathString]; found {
-				log.Infof("Found secret in cache %s", v)
-				return cached.Value, nil
-			}
-			return v, nil
-
-		})
-		return err
-	}
 	for _, branch := range tree.Branches {
-		err := walk(branch)
-		if err != nil {
+		if err = WalkerEncryptSecret(tree, branch, provider); err != nil {
 			return fmt.Errorf("Error walking tree: %s", err)
 		}
 	}
 	return nil
 }
 
+// GetCache returns tree cache of secrets in bytes (csv format)
 func (tree Tree) GetCache() []byte {
 	out := bytes.NewBuffer([]byte(""))
 	for _, secret := range tree.Cache {
@@ -199,6 +178,7 @@ func (tree Tree) GetCache() []byte {
 	return out.Bytes()
 }
 
+// CacheSecretValue stores raw secret in the tree cache
 func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
 	var re = regexp.MustCompile(`@.+`)
 	baseKey := re.ReplaceAllString(fullKey, ``)
@@ -211,6 +191,7 @@ func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
 	return
 }
 
+// IsCached looks for a key in the cache
 func (tree *Tree) IsCached(key string) (string, bool) {
 	var re = regexp.MustCompile(`@.+`)
 	key = re.ReplaceAllString(key, ``)
@@ -218,6 +199,7 @@ func (tree *Tree) IsCached(key string) (string, bool) {
 	return secret.Value, found
 }
 
+// LoadCache from file and store in map inside the tree
 func (tree *Tree) LoadCache(fileReader io.Reader) {
 	tree.Cache = make(map[string]CachedSecret, 0)
 	scanner := bufio.NewScanner(fileReader)

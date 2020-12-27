@@ -82,3 +82,24 @@ var WalkerSyncFetchSecret = func(tree *Tree, branch TreeBranch, provider provide
 	})
 	return err
 }
+
+var WalkerEncryptSecret = func(tree *Tree, branch TreeBranch, provider provider.API) error {
+	_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
+		var cached CachedSecret
+		var ok, found bool
+
+		pathString := strings.Join(path, ":")
+		log.Infof("Walking path %s ", pathString)
+
+		if v, ok = in.(string); !ok {
+			return in, nil
+		}
+		if cached, found = tree.Cache[pathString]; found {
+			log.Infof("Found secret in cache %s", v)
+			return cached.Value, nil
+		}
+		return v, nil
+
+	})
+	return err
+}

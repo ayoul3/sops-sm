@@ -56,7 +56,7 @@ var _ = Describe("EncryptTree", func() {
 var _ = Describe("DumpPlainFile", func() {
 	Context("When saving file suceeds", func() {
 		It("should create a file", func() {
-			handler := &cmd.Handler{Fs: afero.NewMemMapFs()}
+			handler := &cmd.Handler{Fs: afero.NewMemMapFs(), Overwrite: true}
 			provider := ssm.NewClient(&ssm.MockClient{SecretValue: "test"})
 			loader, _ := handler.GetStore("test.yaml")
 			tree := getTree()

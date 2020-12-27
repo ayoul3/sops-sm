@@ -3,20 +3,30 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/ayoul3/sops-sm/stores"
+	"github.com/ayoul3/sops-sm/stores/json"
+	"github.com/ayoul3/sops-sm/stores/yaml"
 	"github.com/spf13/afero"
 )
 
-type Handler struct {
-	Fs         afero.Fs
-	numThreads int
+var formats = map[string]stores.StoreAPI{
+	"yaml": yaml.NewStore(),
+	"json": json.NewStore(),
 }
 
-func NewHandler(numThreads int) *Handler {
+type Handler struct {
+	Fs         afero.Fs
+	NumThreads int
+	Overwrite  bool
+}
+
+func NewHandler(numThreads int, overwrite bool) *Handler {
 	return &Handler{
 		Fs:         afero.NewOsFs(),
-		numThreads: numThreads,
+		NumThreads: numThreads,
+		Overwrite:  overwrite,
 	}
 }
 
@@ -41,4 +51,16 @@ func (h *Handler) GetStore(inputFile string) (stores.StoreAPI, error) {
 		return val, nil
 	}
 	return nil, fmt.Errorf("File format not supported: %s", format)
+}
+
+func (h *Handler) GetOutputFileName(filePath, suffix string) string {
+	if h.Overwrite {
+		return filePath
+	}
+	fileParts := strings.Split(filePath, ".")
+	ext := filepath.Ext(filePath)
+	if len(fileParts) < 1 {
+		return filePath + suffix
+	}
+	return strings.Join(fileParts[0:len(fileParts)-1], "") + suffix + ext
 }

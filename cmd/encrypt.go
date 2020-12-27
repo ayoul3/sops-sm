@@ -64,6 +64,7 @@ func EncryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree)
 	return
 }
 
-func DumpPlainFile(h *Handler, file string, content []byte) (err error) {
-	return afero.WriteFile(h.Fs, file, content, 0644)
+func DumpPlainFile(h *Handler, filePath string, content []byte) (err error) {
+	filePath = h.GetOutputFileName(filePath, ".enc")
+	return afero.WriteFile(h.Fs, filePath, content, 0644)
 }

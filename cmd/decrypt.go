@@ -23,7 +23,7 @@ func (h *Handler) HandleDecrypt(filePath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if content, err = DecryptTree(providerClient, loader, tree, h.numThreads); err != nil {
+	if content, err = DecryptTree(providerClient, loader, tree, h.NumThreads); err != nil {
 		log.Fatal(err)
 	}
 	if err = DumpDecryptedTree(h, tree.FilePath, loader.GetCachePath(), content, tree.GetCache()); err != nil {
@@ -51,9 +51,10 @@ func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree,
 	return
 }
 
-func DumpDecryptedTree(h *Handler, file, cacheFile string, content, cacheContent []byte) (err error) {
+func DumpDecryptedTree(h *Handler, filePath, cacheFile string, content, cacheContent []byte) (err error) {
 	if err = afero.WriteFile(h.Fs, cacheFile, cacheContent, 0644); err != nil {
 		return errors.Wrapf(err, "Could not write to file %s", cacheFile)
 	}
-	return afero.WriteFile(h.Fs, file, content, 0644)
+	filePath = h.GetOutputFileName(filePath, ".plain")
+	return afero.WriteFile(h.Fs, filePath, content, 0644)
 }
