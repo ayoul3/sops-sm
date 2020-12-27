@@ -10,7 +10,7 @@ install:
 	go install sops-sm.go
 
 test:
-	go test ./...
+	go test ./... -v
 
 linux:
 	GOOS=linux GOARCH=amd64 $(BUILD) -o sops-sm sops-sm.go

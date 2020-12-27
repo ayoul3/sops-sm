@@ -1,4 +1,6 @@
 # Sops-SM
+![Build](https://github.com/ayoul3/sops-sm/workflows/Go/badge.svg)
+
 Sops-SM is a leightweight fork of [Sops by Mozilla](https://github.com/mozilla/sops) that handles AWS SecretsManager and AWS Parameter Store.
 
 Given a file with key values containing SecertsManager IDs, its spits out a plain text:
@@ -76,7 +78,7 @@ values:
   - password: arn:aws:ssm:eu-west-1:123456789123:parameter/complex-secret@pass
 ```
 
-## encode the file again
+## Encode the file again
 Each time a file is decoded by sops-sm it generates a cache file containig the path of each secret key along with its original value:
 ```zsh
 $ sops-sm decrypt test.yaml --overwrite
@@ -93,7 +95,8 @@ I may work on it in the future, but there are some challenges to be solved first
 
 ## Detailed Usage
 ```
-Sops-SM decrypts a yaml or json file that contain references to secrets stored in AWS SecretsManager or Parameter Store
+Sops-SM decrypts a yaml or json file that contain references to secrets
+stored in AWS SecretsManager or Parameter Store
 
 Usage:
   sops-sm [command]
