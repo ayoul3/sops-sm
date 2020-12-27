@@ -111,6 +111,9 @@ Flags:
 Use "sops-sm [command] --help" for more information about a command.
 ```
 
+## License
+Mozilla Public License Version 2.0
+
 ## Author
 @ayoul3
 

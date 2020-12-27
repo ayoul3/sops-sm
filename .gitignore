@@ -3,3 +3,6 @@
 *.cache
 *.txt
 *.xml
+sops-sm-*
+sops-sm
+!go.yaml
