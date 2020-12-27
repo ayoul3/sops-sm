@@ -10,7 +10,7 @@ import (
 )
 
 var verbose bool
-
+var version = "0.1"
 var (
 	rootCmd = &cobra.Command{
 		Use:   "sops-sm",
@@ -44,6 +44,13 @@ var (
 			h.HandleEncrypt(args[0])
 		},
 	}
+	versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of Sops-SM",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("sops-sm version %s\n", version)
+		},
+	}
 )
 
 // Execute executes the root command.
@@ -56,8 +63,9 @@ func init() {
 
 	rootCmd.AddCommand(encrypt)
 	rootCmd.AddCommand(decrypt)
-	rootCmd.PersistentFlags().Bool("verbose", false, "Show info messages")
-	rootCmd.PersistentFlags().Bool("overwrite", false, "Overwrite input file")
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Show info messages")
+	rootCmd.PersistentFlags().BoolP("overwrite", "o", false, "Overwrite input file")
 }
 
 func validateFile(args []string) error {
