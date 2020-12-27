@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/ayoul3/sops-sm/stores"
@@ -8,12 +9,14 @@ import (
 	"github.com/ayoul3/sops-sm/stores/yaml"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var formats = map[string]stores.StoreAPI{
 	"yaml": yaml.NewStore(),
 	"json": json.NewStore(),
 }
+var verbose bool
 
 var (
 	rootCmd = &cobra.Command{
@@ -24,22 +27,22 @@ var (
 	decrypt = &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt input file",
+		Args: func(cmd *cobra.Command, args []string) error {
+			SetLogLevel(cmd.Flags())
+			return validateFile(args)
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				log.Fatalf("Input file is required")
-			}
-			validateFile(args[0])
 			NewHandler().HandleDecrypt(args[0])
 		},
 	}
 	encrypt = &cobra.Command{
 		Use:   "encrypt",
 		Short: "Encrypt input file - requires .cache file generated from the decryption phase",
+		Args: func(cmd *cobra.Command, args []string) error {
+			SetLogLevel(cmd.Flags())
+			return validateFile(args)
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				log.Fatalf("Input file is required")
-			}
-			validateFile(args[0])
 			NewHandler().HandleEncrypt(args[0])
 		},
 	}
@@ -53,10 +56,28 @@ func Execute() error {
 func init() {
 	rootCmd.AddCommand(encrypt)
 	rootCmd.AddCommand(decrypt)
+	rootCmd.PersistentFlags().Bool("verbose", false, "Show info messages")
+	//decrypt.PersistentFlags().IntVar(&numTheads, "threads", 1, "Parallelize the decryption process. Consider for files with more than 20 secrets")
+
 }
 
-func validateFile(filePath string) {
+func validateFile(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("Input file is required")
+	}
+	filePath := args[0]
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Fatalf("input file %s does not exist", filePath)
+		return fmt.Errorf("input file %s does not exist", filePath)
+	}
+	return nil
+}
+
+func SetLogLevel(flags *pflag.FlagSet) {
+	verbose, _ := flags.GetBool("verbose")
+
+	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+	log.SetLevel(log.WarnLevel)
+	if verbose {
+		log.SetLevel(log.InfoLevel)
 	}
 }
