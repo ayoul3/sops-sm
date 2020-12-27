@@ -9,12 +9,14 @@ import (
 )
 
 type Handler struct {
-	Fs afero.Fs
+	Fs         afero.Fs
+	numThreads int
 }
 
-func NewHandler() *Handler {
+func NewHandler(numThreads int) *Handler {
 	return &Handler{
-		Fs: afero.NewOsFs(),
+		Fs:         afero.NewOsFs(),
+		numThreads: numThreads,
 	}
 }
 

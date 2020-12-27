@@ -37,7 +37,7 @@ var _ = Describe("DecryptTree", func() {
 			loader, _ := handler.GetStore("test.yaml")
 			tree := getTree()
 
-			content, err := cmd.DecryptTree(provider, loader, &tree)
+			content, err := cmd.DecryptTree(provider, loader, &tree, 1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(content).To(Equal([]byte("name: test\n")))
 		})
@@ -49,7 +49,7 @@ var _ = Describe("DecryptTree", func() {
 			loader, _ := handler.GetStore("test.yaml")
 			tree := getTree()
 
-			_, err := cmd.DecryptTree(provider, loader, &tree)
+			_, err := cmd.DecryptTree(provider, loader, &tree, 1)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -61,7 +61,7 @@ var _ = Describe("DumpDecryptedTree", func() {
 			provider := ssm.NewClient(&ssm.MockClient{SecretValue: "test"})
 			loader, _ := handler.GetStore("test.yaml")
 			tree := getTree()
-			content, err := cmd.DecryptTree(provider, loader, &tree)
+			content, err := cmd.DecryptTree(provider, loader, &tree, 1)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = cmd.DumpDecryptedTree(handler, loader.GetFilePath(), loader.GetCachePath(), content, tree.GetCache())

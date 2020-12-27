@@ -32,7 +32,8 @@ var (
 			return validateFile(args)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			NewHandler().HandleDecrypt(args[0])
+			threads, _ := cmd.Flags().GetInt("threads")
+			NewHandler(threads).HandleDecrypt(args[0])
 		},
 	}
 	encrypt = &cobra.Command{
@@ -43,7 +44,7 @@ var (
 			return validateFile(args)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			NewHandler().HandleEncrypt(args[0])
+			NewHandler(1).HandleEncrypt(args[0])
 		},
 	}
 )
@@ -54,11 +55,11 @@ func Execute() error {
 }
 
 func init() {
+	decrypt.PersistentFlags().Int("threads", 1, "Parallelize the decryption process. Consider for files with more than 30 secrets. Careful of AWS throttling.")
+
 	rootCmd.AddCommand(encrypt)
 	rootCmd.AddCommand(decrypt)
 	rootCmd.PersistentFlags().Bool("verbose", false, "Show info messages")
-	//decrypt.PersistentFlags().IntVar(&numTheads, "threads", 1, "Parallelize the decryption process. Consider for files with more than 20 secrets")
-
 }
 
 func validateFile(args []string) error {

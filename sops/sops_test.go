@@ -65,12 +65,12 @@ func TestSops(t *testing.T) {
 	RunSpecsWithDefaultAndCustomReporters(t, "Sops", []Reporter{reporters.NewJUnitReporter("test_report-sops.xml")})
 }
 
-var _ = Describe("Decrypt", func() {
+var _ = Describe("DecryptSync", func() {
 	Context("When decrypting a tree succeeds", func() {
 		It("should return branches with secret value", func() {
 			client := ssm.NewClient(&ssm.MockClient{SecretValue: "test"})
 			tree := getTree()
-			err := tree.Decrypt(client)
+			err := tree.DecryptSync(client)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "test"}}))
 			Expect(tree.Branches[0][1].Value).To(Equal("test"))
@@ -90,7 +90,7 @@ var _ = Describe("Decrypt", func() {
 				"example_value2",
 			}
 
-			err := tree.Decrypt(client)
+			err := tree.DecryptSync(client)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(tree.Branches[0][1].Value).To(Equal("value1"))
 			Expect(tree.Branches[0][3].Value).To(Equal([]interface{}{
@@ -107,7 +107,7 @@ var _ = Describe("Decrypt", func() {
 		It("should return an error", func() {
 			client := ssm.NewClient(&ssm.MockClient{GetParameterShouldFail: true})
 			tree := getTree()
-			err := tree.Decrypt(client)
+			err := tree.DecryptSync(client)
 			Expect(err).To(HaveOccurred())
 		})
 	})

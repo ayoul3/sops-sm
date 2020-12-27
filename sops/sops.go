@@ -120,8 +120,6 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 // Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
 func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 	log.Info("First walk down the tree to fetch secrets")
-	PrepareAsync(tree, provider, 10)
-
 	for _, branch := range tree.Branches {
 		if err = WalkerAsyncFetchSecret(branch, provider); err != nil {
 			return fmt.Errorf("Error walking tree: %s", err)
@@ -138,7 +136,7 @@ func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 }
 
 // Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
-func (tree *Tree) Decrypt(provider provider.API) (err error) {
+func (tree *Tree) DecryptSync(provider provider.API) (err error) {
 	log.Info("Decrypting tree")
 
 	for _, branch := range tree.Branches {
@@ -147,6 +145,14 @@ func (tree *Tree) Decrypt(provider provider.API) (err error) {
 		}
 	}
 	return nil
+}
+
+func (tree *Tree) Decrypt(provider provider.API, numThreads int) (err error) {
+	if numThreads > 1 {
+		PrepareAsync(tree, provider, numThreads)
+		return tree.DecryptAsync(provider)
+	}
+	return tree.DecryptSync(provider)
 }
 
 // Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore

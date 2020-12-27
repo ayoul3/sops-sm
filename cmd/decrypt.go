@@ -23,7 +23,7 @@ func (h *Handler) HandleDecrypt(filePath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if content, err = DecryptTree(providerClient, loader, tree); err != nil {
+	if content, err = DecryptTree(providerClient, loader, tree, h.numThreads); err != nil {
 		log.Fatal(err)
 	}
 	if err = DumpDecryptedTree(h, tree.FilePath, loader.GetCachePath(), content, tree.GetCache()); err != nil {
@@ -41,8 +41,8 @@ func LoadEncryptedFile(h *Handler, loader stores.StoreAPI) (*sops.Tree, error) {
 	return tree, err
 }
 
-func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree) (content []byte, err error) {
-	if err = tree.Decrypt(provider); err != nil {
+func DecryptTree(provider provider.API, loader stores.StoreAPI, tree *sops.Tree, numThreads int) (content []byte, err error) {
+	if err = tree.Decrypt(provider, numThreads); err != nil {
 		return
 	}
 	if content, err = loader.EmitFile(tree); err != nil {
