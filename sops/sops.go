@@ -90,7 +90,6 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 	for i, item := range in {
 		if _, ok := item.Key.(Comment); ok {
 			enc, err := branch.walkValue(item.Key, path, onLeaves)
-			fmt.Println(enc)
 			if err != nil {
 				return nil, err
 			}
@@ -119,41 +118,31 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 }
 
 // Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
-func (tree Tree) Decrypt(provider provider.API) error {
+func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
+	log.Info("First walk down the tree to fetch secrets")
+	PrepareAsync(tree, provider, 10)
+
+	for _, branch := range tree.Branches {
+		if err = WalkerAsyncFetchSecret(branch, provider); err != nil {
+			return fmt.Errorf("Error walking tree: %s", err)
+		}
+	}
+	CacheAsyncSecret(tree)
+	log.Info("Second walk down the tree to fetch secrets from cache")
+	for _, branch := range tree.Branches {
+		if err = WalkerSyncFetchSecret(tree, branch, provider); err != nil {
+			return fmt.Errorf("Error walking tree: %s", err)
+		}
+	}
+	return nil
+}
+
+// Decrypt walks over the tree and fetches IDs from SecretsManager or ParameterStore
+func (tree *Tree) Decrypt(provider provider.API) (err error) {
 	log.Info("Decrypting tree")
 
-	walk := func(branch TreeBranch) error {
-		_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
-			var cached, secretValue string
-			var ok, found bool
-
-			pathString := strings.Join(path, ":")
-			log.Infof("Walking path %s ", pathString)
-
-			if v, ok = in.(string); !ok {
-				return in, nil
-			}
-			if cached, found = tree.IsCached(v.(string)); found {
-				log.Infof("Found secret in cache %s", v)
-				tree.CacheSecretValue(v.(string), cached, pathString) // update cache path
-				return ExtractKeyWhenJson(v.(string), cached)
-			}
-			if provider.IsSecret(v.(string)) {
-				log.Infof("Fetching secret %s ", v)
-				if secretValue, err = provider.GetSecret(v.(string)); err != nil {
-					return nil, err
-				}
-				tree.CacheSecretValue(v.(string), secretValue, pathString)
-				return ExtractKeyWhenJson(v.(string), secretValue)
-			}
-			return v, nil
-
-		})
-		return err
-	}
 	for _, branch := range tree.Branches {
-		err := walk(branch)
-		if err != nil {
+		if err = WalkerSyncFetchSecret(tree, branch, provider); err != nil {
 			return fmt.Errorf("Error walking tree: %s", err)
 		}
 	}
