@@ -90,6 +90,7 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(
 	for i, item := range in {
 		if _, ok := item.Key.(Comment); ok {
 			enc, err := branch.walkValue(item.Key, path, onLeaves)
+			fmt.Println(enc)
 			if err != nil {
 				return nil, err
 			}

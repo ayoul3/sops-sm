@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/afero"
 )
 
 func getTree() Tree {
@@ -41,6 +42,14 @@ func getTree() Tree {
 				TreeItem{
 					Key:   "example_number",
 					Value: 1234.56789,
+				},
+				TreeItem{
+					Key:   "example_int",
+					Value: 1234,
+				},
+				TreeItem{
+					Key:   "test",
+					Value: nil,
 				},
 				TreeItem{
 					Key:   "example_booleans",
@@ -119,6 +128,34 @@ var _ = Describe("Encrypt", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"}}))
 			Expect(tree.Branches[0][1].Value).To(Equal("arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"))
+		})
+	})
+})
+
+var _ = Describe("LoadCache", func() {
+	Context("When loading the cache succeeds", func() {
+		It("should return a full cache", func() {
+			fs := afero.NewMemMapFs()
+			afero.WriteFile(fs, "test.yaml.cache", []byte("values:key1,arn:aws:ssm:eu-west-1:886477354405:parameter/key1\nvalues:key4,arn:aws:ssm:eu-west-1:886477354405:parameter/key4\nrandomstuff"), 0644)
+			input, _ := fs.Open("test.yaml.cache")
+			tree := getTree()
+			tree.LoadCache(input)
+			Expect(len(tree.Cache)).To(Equal(2))
+			Expect(tree.Cache).To(HaveKey("values:key1"))
+			Expect(tree.Cache).To(HaveKey("values:key4"))
+		})
+	})
+})
+var _ = Describe("walkBranch", func() {
+	Context("When the tree contains a nil key", func() {
+		It("should return an error", func() {
+			tree := getTree()
+			branch := tree.Branches[0]
+			branch[0].Key = nil
+			_, err := branch.walkBranch(branch, make([]string, 0), func(in interface{}, path []string) (v interface{}, err error) {
+				return in, err
+			})
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })
