@@ -59,7 +59,7 @@ func Execute() error {
 }
 
 func init() {
-	decrypt.PersistentFlags().Int("threads", 1, "Parallelize the decryption process. Consider for files with more than 30 secrets. Careful of AWS throttling.")
+	decrypt.PersistentFlags().IntP("threads", "t", 1, "Parallelize the decryption process. Consider for files with more than 30 secrets. Careful of AWS throttling.")
 
 	rootCmd.AddCommand(encrypt)
 	rootCmd.AddCommand(decrypt)
