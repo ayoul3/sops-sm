@@ -84,9 +84,9 @@ var _ = Describe("DecryptSync", func() {
 		It("should return branches with secret value", func() {
 			client := ssm.NewClient(&ssm.MockClient{SecretValue: `{"index1": "value1", "index2": "value2"}`})
 			tree := getTree()
-			tree.Branches[0][1].Value = "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam@index1"
+			tree.Branches[0][1].Value = "arn:aws:ssm:eu-west-1:123456789123:parameter/someparam#index1"
 			tree.Branches[0][3].Value = []interface{}{
-				"arn:aws:ssm:eu-west-1:123456789123:parameter/someparam@index2",
+				"arn:aws:ssm:eu-west-1:123456789123:parameter/someparam#index2",
 				"example_value2",
 			}
 
@@ -180,11 +180,11 @@ var _ = Describe("GetCache", func() {
 			tree := getTree()
 			tree.Cache = map[string]CachedSecret{
 				"keyid_1": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_1", FullPath: "k1:k2:k3"}}},
-				"keyid_2": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_2@user", FullPath: "k4"}}},
+				"keyid_2": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_2#user", FullPath: "k4"}}},
 			}
 			content := tree.GetCache()
 			Expect(content).To(ContainSubstring("k1:k2:k3,keyid_1"))
-			Expect(content).To(ContainSubstring("k4,keyid_2@user"))
+			Expect(content).To(ContainSubstring("k4,keyid_2#user"))
 		})
 	})
 })

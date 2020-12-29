@@ -14,6 +14,7 @@ const defaultRegion = "eu-west-1"
 type API interface {
 	GetSecret(key string) (secret string, err error)
 	IsSecret(key string) bool
+	WithRegion(region string)
 }
 
 type Provider struct {
@@ -28,6 +29,8 @@ func Init() *Provider {
 	}
 	return p
 }
+func (p *Provider) WithRegion(region string) {
+}
 
 func (p *Provider) GetSecret(key string) (secret string, err error) {
 	var pattern, region string
@@ -35,7 +38,7 @@ func (p *Provider) GetSecret(key string) (secret string, err error) {
 		return "", errors.Wrapf(err, "GetSecret ")
 	}
 	if client, ok := p.Apis[pattern]; ok {
-		client = ssm.NewClient(ssm.NewAPIForRegion(region))
+		client.WithRegion(region)
 		return client.GetSecret(key)
 	}
 	return "", fmt.Errorf("Unknown provider for secret %s", key)

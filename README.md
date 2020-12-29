@@ -65,7 +65,7 @@ Secrets stored in SecretsManager or ParameterStore can be of two formats:
 * Simple strings
 * Flat JSON
 
-You can specify which JSON key to fetch by adding it after the character `@`.
+You can specify which JSON key to fetch by adding it after the character `#`.
 
 *Example*: let's create a secret with a JSON structure:
 ```
@@ -74,8 +74,8 @@ aws ssm put-parameter --name complex-secret --value '{"user":"name","pass":"secr
 Our encoded file would look like:
 ```yaml
 values:
-  - name: arn:aws:ssm:eu-west-1:123456789123:parameter/complex-secret@user
-  - password: arn:aws:ssm:eu-west-1:123456789123:parameter/complex-secret@pass
+  - name: arn:aws:ssm:eu-west-1:123456789123:parameter/complex-secret#user
+  - password: arn:aws:ssm:eu-west-1:123456789123:parameter/complex-secret#pass
 ```
 
 ## Encode the file again

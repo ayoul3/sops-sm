@@ -35,6 +35,11 @@ func NewAPIForRegion(region string) ssmiface.SSMAPI {
 	return awsssm.New(session.NewFromRegion(region))
 }
 
+// Overrides region
+func (c *Client) WithRegion(region string) {
+	c.api = awsssm.New(session.NewFromRegion(region))
+}
+
 // GetSecret return a Secret fetched from SSM
 func (c *Client) GetSecret(key string) (secret string, err error) {
 	formattedKey := c.ExtractPath(key)

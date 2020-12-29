@@ -19,10 +19,10 @@ func PrepareAsync(tree *Tree, provider provider.API, numThreads int) {
 func ExtractKeyWhenJson(key, value string) (out string, err error) {
 	var parsed map[string]string
 
-	if !strings.Contains(key, "@") {
+	if !strings.Contains(key, "#") {
 		return value, nil
 	}
-	keyParts := strings.Split(key, "@")
+	keyParts := strings.Split(key, "#")
 	desiredKey := keyParts[1]
 
 	if err = json.Unmarshal([]byte(value), &parsed); err != nil {

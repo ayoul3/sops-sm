@@ -44,16 +44,21 @@ func (c *Client) GetSecret(key string) (secret string, err error) {
 	return *res.SecretString, nil
 }
 
+// Overrides region
+func (c *Client) WithRegion(region string) {
+	c.api = secretsmanager.New(session.NewFromRegion(region))
+}
+
 func (c *Client) IsSecret(key string) bool {
 	return strings.Contains(key, "arn:aws:secretsmanager")
 }
 
 func (c *Client) ExtractPath(key string) (out string) {
-	var re = regexp.MustCompile(`arn:aws:secretsmanager:[a-z0-9-]+:\d+:secret([a-zA-Z0-9/._-]+)`)
+	var re = regexp.MustCompile(`(arn:aws:secretsmanager:[a-z0-9-]+:\d+:secret:[a-zA-Z0-9/._=@-]+)`)
 	match := re.FindStringSubmatch(key)
 	if len(match) < 1 {
 		log.Warnf("Badly formatted key %s", key)
-		return ""
+		return key
 	}
 	return match[1]
 }

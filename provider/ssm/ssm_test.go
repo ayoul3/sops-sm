@@ -26,7 +26,7 @@ var _ = Describe("SSM", func() {
 		Context("When the keys contains an index", func() {
 			It("it should return the secret", func() {
 				client := ssm.NewClient(&ssm.MockClient{})
-				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1@index")
+				secret, err := client.GetSecret("arn:aws:ssm:eu-west-1:123456789123:parameter/key1#index")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(secret).To(Equal(ssm.MockSecretValue))
 			})

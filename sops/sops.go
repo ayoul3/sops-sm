@@ -180,7 +180,7 @@ func (tree Tree) GetCache() []byte {
 
 // CacheSecretValue stores raw secret in the tree cache
 func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
-	var re = regexp.MustCompile(`@.+`)
+	var re = regexp.MustCompile(`#.+`)
 	baseKey := re.ReplaceAllString(fullKey, ``)
 	pathSecret := []PathSecret{{FullKey: fullKey, FullPath: path}}
 	if path == "" {
@@ -195,7 +195,7 @@ func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
 
 // IsCached looks for a key in the cache
 func (tree *Tree) IsCached(key string) (string, bool) {
-	var re = regexp.MustCompile(`@.+`)
+	var re = regexp.MustCompile(`#.+`)
 	key = re.ReplaceAllString(key, ``)
 	secret, found := tree.Cache[key]
 	return secret.Value, found
