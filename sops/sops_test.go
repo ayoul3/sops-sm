@@ -113,6 +113,33 @@ var _ = Describe("DecryptSync", func() {
 	})
 })
 
+var _ = Describe("DecryptAsync", func() {
+	Context("When decrypting a tree succeeds", func() {
+		It("should return branches with secret value", func() {
+			client := ssm.NewClient(&ssm.MockClient{SecretValue: "test"})
+			tree := getTree()
+			PrepareAsync(&tree, client, 2)
+			err := tree.DecryptAsync(client)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(tree.Branches[0][0].Value).To(Equal(TreeBranch{TreeItem{Key: "nested", Value: "test"}}))
+			Expect(tree.Branches[0][1].Value).To(Equal("test"))
+			Expect(len(tree.Cache)).To(Equal(1))
+			Expect(tree.Cache).To(HaveKey("arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"))
+			Expect(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Value).To(Equal("test"))
+			Expect(len(tree.Cache["arn:aws:ssm:eu-west-1:123456789123:parameter/someparam"].Path)).To(Equal(2))
+		})
+	})
+	Context("When decrypting a tree fails", func() {
+		It("should return an error", func() {
+			client := ssm.NewClient(&ssm.MockClient{GetParameterShouldFail: true})
+			tree := getTree()
+			PrepareAsync(&tree, client, 2)
+			err := tree.DecryptAsync(client)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
+
 var _ = Describe("Encrypt", func() {
 	Context("When encrypting a tree succeeds", func() {
 		It("should return branches with secret value", func() {
@@ -146,6 +173,21 @@ var _ = Describe("LoadCache", func() {
 		})
 	})
 })
+
+var _ = Describe("GetCache", func() {
+	Context("When fetching cache", func() {
+		It("should return csv", func() {
+			tree := getTree()
+			tree.Cache = map[string]CachedSecret{
+				"keyid_1": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_1", FullPath: "k1:k2:k3"}}},
+				"keyid_2": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_2@user", FullPath: "k4"}}},
+			}
+			content := tree.GetCache()
+			Expect(content).To(Equal([]byte("k1:k2:k3,keyid_1\nk4,keyid_2@user\n")))
+		})
+	})
+})
+
 var _ = Describe("walkBranch", func() {
 	Context("When the tree contains a nil key", func() {
 		It("should return an error", func() {

@@ -47,7 +47,7 @@ var WalkerAsyncFetchSecret = func(branch TreeBranch, provider provider.API) erro
 		}
 		if provider.IsSecret(v.(string)) {
 			log.Infof("sending secret for async processing %s", in.(string))
-			MsgChan <- WorkerSecret{Key: in.(string), Path: pathString}
+			MsgChan <- WorkerSecret{Key: in.(string)}
 		}
 		return v, nil
 	})

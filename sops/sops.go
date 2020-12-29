@@ -125,7 +125,7 @@ func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 			return fmt.Errorf("Error walking tree: %s", err)
 		}
 	}
-	<-Done
+	<-WorkerDone
 	log.Info("Second walk down the tree to fetch secrets from cache")
 	for _, branch := range tree.Branches {
 		if err = WalkerSyncFetchSecret(tree, branch, provider); err != nil {
@@ -182,8 +182,10 @@ func (tree Tree) GetCache() []byte {
 func (tree *Tree) CacheSecretValue(fullKey, value, path string) {
 	var re = regexp.MustCompile(`@.+`)
 	baseKey := re.ReplaceAllString(fullKey, ``)
-
 	pathSecret := []PathSecret{{FullKey: fullKey, FullPath: path}}
+	if path == "" {
+		pathSecret = []PathSecret{}
+	}
 	if stored, ok := tree.Cache[baseKey]; ok {
 		pathSecret = append(stored.Path, pathSecret...)
 	}

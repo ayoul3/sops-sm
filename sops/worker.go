@@ -15,12 +15,12 @@ type WorkerSecret struct {
 
 var MsgChan chan WorkerSecret
 var ReportChan chan WorkerSecret
-var Done chan bool
+var WorkerDone chan bool
 
 func InitWorkers(numThreads int) {
 	MsgChan = make(chan WorkerSecret, numThreads)
 	ReportChan = make(chan WorkerSecret, numThreads)
-	Done = make(chan bool)
+	WorkerDone = make(chan bool)
 }
 
 func RunWorkers(provider provider.API) {
@@ -50,5 +50,5 @@ loop:
 			break loop
 		}
 	}
-	Done <- true
+	WorkerDone <- true
 }
