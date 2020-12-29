@@ -15,12 +15,12 @@ type WorkerSecret struct {
 
 var MsgChan chan WorkerSecret
 var ReportChan chan WorkerSecret
-
-const DoneMsg = "##EOF##"
+var Done chan bool
 
 func InitWorkers(numThreads int) {
 	MsgChan = make(chan WorkerSecret, numThreads)
 	ReportChan = make(chan WorkerSecret, numThreads)
+	Done = make(chan bool)
 }
 
 func RunWorkers(provider provider.API) {
@@ -33,7 +33,6 @@ func RunWorkers(provider provider.API) {
 				log.Warnf("RunWorkers: Error fetching secret %s: %s", msg.Key, err)
 				return
 			}
-			//time.Sleep(time.Duration(rand.Int63n(3)) * time.Second)
 			ReportChan <- msg
 		}(msg)
 	}
@@ -51,4 +50,5 @@ loop:
 			break loop
 		}
 	}
+	Done <- true
 }

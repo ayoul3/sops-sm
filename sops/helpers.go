@@ -13,6 +13,7 @@ import (
 func PrepareAsync(tree *Tree, provider provider.API, numThreads int) {
 	InitWorkers(numThreads)
 	go RunWorkers(provider)
+	go CacheAsyncSecret(tree)
 }
 
 func ExtractKeyWhenJson(key, value string) (out string, err error) {

@@ -125,7 +125,7 @@ func (tree *Tree) DecryptAsync(provider provider.API) (err error) {
 			return fmt.Errorf("Error walking tree: %s", err)
 		}
 	}
-	CacheAsyncSecret(tree)
+	<-Done
 	log.Info("Second walk down the tree to fetch secrets from cache")
 	for _, branch := range tree.Branches {
 		if err = WalkerSyncFetchSecret(tree, branch, provider); err != nil {
