@@ -183,7 +183,8 @@ var _ = Describe("GetCache", func() {
 				"keyid_2": {Value: "secret", Path: []PathSecret{{FullKey: "keyid_2@user", FullPath: "k4"}}},
 			}
 			content := tree.GetCache()
-			Expect(content).To(Equal([]byte("k1:k2:k3,keyid_1\nk4,keyid_2@user\n")))
+			Expect(content).To(ContainSubstring("k1:k2:k3,keyid_1"))
+			Expect(content).To(ContainSubstring("k4,keyid_2@user"))
 		})
 	})
 })
