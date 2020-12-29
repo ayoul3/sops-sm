@@ -6,3 +6,4 @@
 sops-sm-*
 sops-sm
 !go.yaml
+target

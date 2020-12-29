@@ -1,5 +1,5 @@
 BUILD=go build -ldflags="-s -w"
-TARGETDIR=""
+DIR="."
 build:
 	$(BUILD) sops-sm.go
 
@@ -13,15 +13,15 @@ test:
 	go test ./... -v
 
 linux:
-	GOOS=linux GOARCH=amd64 $(BUILD) -o sops-sm sops-sm.go
+	GOOS=linux GOARCH=amd64 $(BUILD) -o $(DIR)/sops-sm sops-sm.go
 
 windows:
-	GOOS=windows GOARCH=amd64 $(BUILD) -o sops-sm-windows.exe sops-sm.go
+	GOOS=windows GOARCH=amd64 $(BUILD) -o $(DIR)/sops-sm-windows.exe sops-sm.go
 
 darwin:
-	GOOS=darwin GOARCH=amd64 $(BUILD) -o sops-sm-darwin sops-sm.go
+	GOOS=darwin GOARCH=amd64 $(BUILD) -o $(DIR)/sops-sm-darwin sops-sm.go
 
 freebsd:
-	GOOS=freebsd GOARCH=amd64 $(BUILD) -o sops-sm-freebsd sops-sm.go
+	GOOS=freebsd GOARCH=amd64 $(BUILD) -o $(DIR)/sops-sm-freebsd sops-sm.go
 
 build-all: linux windows darwin freebsd
